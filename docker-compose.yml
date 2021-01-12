@@ -1,0 +1,22 @@
+version: '2'
+services:
+    medregapi-v2:
+        build: .
+        image: theshamuel/medreg20
+        hostname: medregapi-v2
+        restart: always
+        container_name: medregapi-v2
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "2"
+        ports:
+            - "9002:9002"
+        environment:
+            - MEDREG_API_V1_URL="medregapi-v1:9000/api/v1"
+
+networks:
+    default:
+        external:
+            name: medreg-network
