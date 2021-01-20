@@ -1,12 +1,8 @@
 # medregistry20
-The backend API version 2.0 for [MedRegistry](https://github.com/theshamuel/medregistry) open-source project provided CRM system in a medical domain.
-
 
 ### DESCRIPTION
-This is project which provide API version 2.0.
+The backend API version 2.0 for [MedRegistry](https://github.com/theshamuel/medregistry) open-source project provided CRM system in a medical domain.
 
-
-OpenJDK version 15.0.1 is recommended for building jar archive. Build jar to `target` directory.
 
 #### Database
 The first start of db container import medregdb_starter.tar.gz dumb of database with collection and demo admin-user for getting JWT token and manage `users` (admin/admin). The database is ready deploy on production and has all necessary indexes for optimisation in queries. Also for container has scripts for backup on host instanse and to `AWS S3`. If you need this setup specal enviroment variables.
