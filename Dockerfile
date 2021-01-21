@@ -1,4 +1,4 @@
-FROM theshamuel/baseimg-go-build:1.13.1 as builder
+FROM theshamuel/baseimg-go-build:1.15.1 as builder
 
 ARG VER
 ARG SKIP_TESTS
