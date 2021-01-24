@@ -16,7 +16,7 @@ import (
 type ServerCommand struct {
 	StoreEngine StoreGroup `group:"store" namespace:"store" env-namespace:"STORE"`
 	Version     string
-	Port        int `long:"port" env:"SERVER_PORT" default:"9002" description:"port"`
+	Port        int `long:"port" env:"SERVER_PORT" default:"9002" description:"application port"`
 	CommonOptions
 }
 
