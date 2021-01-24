@@ -17,7 +17,7 @@ type Opts struct {
 	ServerCmd      cmd.ServerCommand `command:"server"`
 	MedregAPIV1URL string            `long:"apiV1url" env:"MEDREG_API_V1_URL" default:"http://localhost:9000/api/v1/" description:"url to medregestry api v1 "`
 	ReportsPath    string            `long:"reportsPath" env:"REPORT_PATH" required:"true" default:"./reports" description:"file system path to root report folder"`
-	Dbg            bool              `long:"dbg" env:"DEBUG" description:"debug mode"`
+	Debug            bool              `long:"debug" env:"DEBUG" description:"debug mode"`
 }
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
 	p.CommandHandler = func(command flags.Commander, args []string) error {
-		setupLogLevel(opts.Dbg)
+		setupLogLevel(opts.Debug)
 		c := command.(cmd.CommonOptionsCommander)
 		c.SetCommon(cmd.CommonOptions{
 			MedregAPIV1URL: opts.MedregAPIV1URL,
