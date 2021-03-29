@@ -10,6 +10,9 @@ func TestClientSetAgePostfix(t *testing.T)  {
 		c   Client
 		res string
 	}{
+		{Client{Age: 1}, "год"},
+		{Client{Age: 2}, "года"},
+		{Client{Age: 4}, "года"},
 		{Client{Age: 10}, "лет"},
 		{Client{Age: 20}, "лет"},
 		{Client{Age: 30}, "лет"},
