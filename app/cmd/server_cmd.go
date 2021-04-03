@@ -40,7 +40,7 @@ type application struct {
 }
 
 //Execute is the entry point for server command
-func (sc *ServerCommand) Execute(args []string) error {
+func (sc *ServerCommand) Execute(_ []string) error {
 	log.Printf("[INFO] start app server")
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {

@@ -8,7 +8,7 @@ import (
 
 const (
 	ErrServerInternal = 0 // server internal error
-	ErrJsonDecode     = 1 // failed unmarshalling incoming request
+	ErrJSONDecode     = 1 // failed unmarshalling incoming request
 )
 
 func SendErrorJSON(w http.ResponseWriter, r *http.Request, httpStatusCode int, err error, errCode int, details string) {
