@@ -17,7 +17,7 @@ type Opts struct {
 	ServerCmd      cmd.ServerCommand `command:"server"`
 	MedregAPIV1URL string            `long:"apiV1url" env:"MEDREG_API_V1_URL" default:"http://localhost:9000/api/v1/" description:"url to medregestry api v1 "`
 	ReportsPath    string            `long:"reportsPath" env:"REPORT_PATH" required:"true" default:"./reports" description:"file system path to root report folder"`
-	Debug            bool              `long:"debug" env:"DEBUG" description:"debug mode"`
+	Debug          bool              `long:"debug" env:"DEBUG" description:"debug mode"`
 }
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 		c := command.(cmd.CommonOptionsCommander)
 		c.SetCommon(cmd.CommonOptions{
 			MedregAPIV1URL: opts.MedregAPIV1URL,
-			ReportsPath: opts.ReportsPath,
+			ReportsPath:    opts.ReportsPath,
 		})
 		err := c.Execute(args)
 		if err != nil {
