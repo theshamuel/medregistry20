@@ -78,7 +78,7 @@ func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, s
 		log.Printf("[ERROR] can not save report templateReportOfWorkPeriodByDoctor.xlsx")
 	}
 
-	res, err := ConvertExcellFileToBytes(f)
+	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
 		log.Printf("[ERROR] Cannot convert file to bytes")
 	}
@@ -218,14 +218,14 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 			strings.Title(strings.ToLower(doctor.Middlename)))
 	f.SetCellStr(sheetName, "J40", fioDoctorCell)
 
-	res, err := ConvertExcellFileToBytes(f)
+	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
 		log.Printf("[ERROR] Cannot convert file to bytes")
 	}
 	return res, nil
 }
 
-func ConvertExcellFileToBytes(f *excelize.File) ([]byte, error) {
+func ConvertExcelFileToBytes(f *excelize.File) ([]byte, error) {
 	fileName := os.TempDir() + "/" + strconv.FormatInt(time.Now().Unix(), 10) + ".xlsx"
 	err := f.SaveAs(fileName)
 	if err != nil {
