@@ -50,7 +50,7 @@ func TestRest_Run(t *testing.T) {
 }
 
 func TestRest_Ping(t *testing.T) {
-	ts, _, teardown := startHTTPServer()
+	ts, _, _, teardown := startHTTPServer()
 	defer teardown()
 
 	res, code := getRequest(t, ts.URL+"/ping")
@@ -58,17 +58,77 @@ func TestRest_Ping(t *testing.T) {
 	assert.Equal(t, http.StatusOK, code)
 }
 
-func startHTTPServer() (ts *httptest.Server, rest *Rest, gracefulTeardown func()) {
+func TestRest_ReportVisitResult(t *testing.T) {
+	ts, _, engineMock, teardown := startHTTPServer()
+	defer teardown()
+	_, code := getRequest(t, ts.URL+"/api/v2/reports/file/reportVisitResult/1/test.xlsx")
+	assert.Equal(t, http.StatusOK, code)
+
+	if len(engineMock.FindVisitByIdCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindVisitByIdCalls was called %d times", len(engineMock.FindVisitByIdCalls()),
+			len(engineMock.FindVisitByIdCalls()))
+	}
+	if len(engineMock.FindClientByIdCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindClientByIdCalls was called %d times", len(engineMock.FindClientByIdCalls()),
+			len(engineMock.FindClientByIdCalls()))
+	}
+	if len(engineMock.FindDoctorByIdCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindDoctorByIdCalls was called %d times", len(engineMock.FindDoctorByIdCalls()),
+			len(engineMock.FindDoctorByIdCalls()))
+	}
+	if len(engineMock.CompanyDetailCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, CompanyDetailCalls was called %d times", len(engineMock.CompanyDetailCalls()),
+			len(engineMock.CompanyDetailCalls()))
+	}
+}
+
+func startHTTPServer() (ts *httptest.Server, rest *Rest, engineMock *store.EngineInterfaceMock, gracefulTeardown func()) {
+	engineMock = &store.EngineInterfaceMock{
+		FindVisitByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
+			visits := []model.Visit{
+				{
+					ID:                        "1",
+					DoctorID:                  "1",
+					DoctorName:                "Alex Alex",
+					DoctorExcludedFromReports: false,
+				},
+				{
+					ID:                        "2",
+					DoctorID:                  "1",
+					DoctorName:                "Alex Alex",
+					DoctorExcludedFromReports: false,
+				},
+			}
+			return visits, nil
+		},
+		FindVisitByIdFunc: func(id string) (model.Visit, error) {
+			return model.Visit{}, nil
+		},
+		FindClientByIdFunc: func(id string) (model.Client, error) {
+			return model.Client{}, nil
+		},
+		FindDoctorByIdFunc: func(id string) (model.Doctor, error) {
+			return model.Doctor{}, nil
+		},
+		CompanyDetailFunc: func() (model.Company, error) {
+			return model.Company{}, nil
+		},
+	}
+	service := &service.DataStore{
+		Engine: engineMock,
+	}
+
 	rest = &Rest{
-		Version:    "test",
-		URI:        "http://localhost:8888/api/v1/",
-		ReportPath: "/srv/reportPath",
+		DataService: service,
+		Version:     "test",
+		URI:         "http://localhost:8888/api/v1/",
+		ReportPath:  "/srv/reportPath",
 	}
 	ts = httptest.NewServer(rest.routes())
 	gracefulTeardown = func() {
 		ts.Close()
 	}
-	return ts, rest, gracefulTeardown
+	return ts, rest, engineMock, gracefulTeardown
 }
 
 func generateRndPort() (port int) {
