@@ -34,7 +34,7 @@ func main() {
 		})
 		err := c.Execute(args)
 		if err != nil {
-			log.Printf("[ERROR] failed with %+v", err)
+			log.Printf("[ERROR] failed with %v", err)
 		}
 		return err
 	}

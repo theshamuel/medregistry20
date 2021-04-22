@@ -52,11 +52,11 @@ func (sc *ServerCommand) Execute(_ []string) error {
 	}()
 	app, err := sc.bootstrapApp()
 	if err != nil {
-		log.Printf("[PANIC] Failed to setup application, %+v", err)
+		log.Printf("[PANIC] Failed to setup application, %v", err)
 		return err
 	}
 	if err = app.run(ctx); err != nil {
-		log.Printf("[ERROR] Server terminated with error %+v", err)
+		log.Printf("[ERROR] Server terminated with error %v", err)
 		return err
 	}
 	log.Printf("[INFO] Server terminated")
