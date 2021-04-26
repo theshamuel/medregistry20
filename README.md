@@ -1,5 +1,7 @@
 # medregistry20
 
+[![Coverage Status](https://coveralls.io/repos/github/theshamuel/medregistry20/badge.svg?branch=master)](https://coveralls.io/github/theshamuel/medregistry20?branch=master)
+
 ### DESCRIPTION
 The backend API version 2.0 for [MedRegistry](https://github.com/theshamuel/medregistry) open-source project provided CRM system in a medical domain.
 
