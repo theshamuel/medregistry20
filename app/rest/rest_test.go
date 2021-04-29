@@ -64,17 +64,17 @@ func TestRest_ReportVisitResult(t *testing.T) {
 	_, code := getRequest(t, ts.URL+"/api/v2/reports/file/reportVisitResult/1/test.xlsx")
 	assert.Equal(t, http.StatusOK, code)
 
-	if len(engineMock.FindVisitByIdCalls()) != 1 {
-		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindVisitByIdCalls was called %d times", len(engineMock.FindVisitByIdCalls()),
-			len(engineMock.FindVisitByIdCalls()))
+	if len(engineMock.FindVisitByIDCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindVisitByIDCalls was called %d times", len(engineMock.FindVisitByIDCalls()),
+			len(engineMock.FindVisitByIDCalls()))
 	}
-	if len(engineMock.FindClientByIdCalls()) != 1 {
-		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindClientByIdCalls was called %d times", len(engineMock.FindClientByIdCalls()),
-			len(engineMock.FindClientByIdCalls()))
+	if len(engineMock.FindClientByIDCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindClientByIDCalls was called %d times", len(engineMock.FindClientByIDCalls()),
+			len(engineMock.FindClientByIDCalls()))
 	}
-	if len(engineMock.FindDoctorByIdCalls()) != 1 {
-		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindDoctorByIdCalls was called %d times", len(engineMock.FindDoctorByIdCalls()),
-			len(engineMock.FindDoctorByIdCalls()))
+	if len(engineMock.FindDoctorByIDCalls()) != 1 {
+		t.Errorf("[ERROR] ReportVisitResult was called %d times, FindDoctorByIDCalls was called %d times", len(engineMock.FindDoctorByIDCalls()),
+			len(engineMock.FindDoctorByIDCalls()))
 	}
 	if len(engineMock.CompanyDetailCalls()) != 1 {
 		t.Errorf("[ERROR] ReportVisitResult was called %d times, CompanyDetailCalls was called %d times", len(engineMock.CompanyDetailCalls()),
@@ -101,13 +101,13 @@ func startHTTPServer() (ts *httptest.Server, rest *Rest, engineMock *store.Engin
 			}
 			return visits, nil
 		},
-		FindVisitByIdFunc: func(id string) (model.Visit, error) {
+		FindVisitByIDFunc: func(id string) (model.Visit, error) {
 			return model.Visit{}, nil
 		},
-		FindClientByIdFunc: func(id string) (model.Client, error) {
+		FindClientByIDFunc: func(id string) (model.Client, error) {
 			return model.Client{}, nil
 		},
-		FindDoctorByIdFunc: func(id string) (model.Doctor, error) {
+		FindDoctorByIDFunc: func(id string) (model.Doctor, error) {
 			return model.Doctor{}, nil
 		},
 		CompanyDetailFunc: func() (model.Company, error) {

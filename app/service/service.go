@@ -87,9 +87,9 @@ func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, s
 }
 
 func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
-	visit, _ := s.Engine.FindVisitById(visitID)
-	client, _ := s.Engine.FindClientById(visit.ClientID)
-	doctor, _ := s.Engine.FindDoctorById(visit.DoctorID)
+	visit, _ := s.Engine.FindVisitByID(visitID)
+	client, _ := s.Engine.FindClientByID(visit.ClientID)
+	doctor, _ := s.Engine.FindDoctorByID(visit.DoctorID)
 	company, _ := s.Engine.CompanyDetail()
 
 	f, err := excelize.OpenFile(s.ReportPath + "/templateVisitResult.xlsx")

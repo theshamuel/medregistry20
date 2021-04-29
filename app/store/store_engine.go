@@ -5,9 +5,9 @@ import (
 )
 
 type EngineInterface interface {
-	FindVisitById(id string)(model.Visit, error)
-	FindClientById(id string)(model.Client, error)
-	FindDoctorById(id string)(model.Doctor, error)
+	FindVisitByID(id string)(model.Visit, error)
+	FindClientByID(id string)(model.Client, error)
+	FindDoctorByID(id string)(model.Doctor, error)
 	CompanyDetail()(model.Company, error)
 	FindVisitByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string)([]model.Visit, error)
 	Close() error

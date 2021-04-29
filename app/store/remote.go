@@ -35,8 +35,8 @@ func (s *Remote) FindVisitByDoctorSinceTill(doctorID string, startDateEvent, end
 	return visits, nil
 }
 
-func (s *Remote) FindVisitById(visitID string)(visit model.Visit, err error) {
-	log.Printf("[INFO] FindVisitById params visitID=%s;", visitID)
+func (s *Remote) FindVisitByID(visitID string)(visit model.Visit, err error) {
+	log.Printf("[INFO] FindVisitByID params visitID=%s;", visitID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
@@ -60,8 +60,8 @@ func (s *Remote) FindVisitById(visitID string)(visit model.Visit, err error) {
 	}
 	return visit, nil
 }
-func (s *Remote) FindClientById(clientID string)(client model.Client, err error) {
-	log.Printf("[INFO] FindClientById params clientID=%s;", clientID)
+func (s *Remote) FindClientByID(clientID string)(client model.Client, err error) {
+	log.Printf("[INFO] FindClientByID params clientID=%s;", clientID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
@@ -87,8 +87,8 @@ func (s *Remote) FindClientById(clientID string)(client model.Client, err error)
 	}
 	return client, nil
 }
-func (s *Remote) FindDoctorById(doctorID string)(doctor model.Doctor, err error) {
-	log.Printf("[INFO] FindDoctorById params doctorID=%s;", doctorID)
+func (s *Remote) FindDoctorByID(doctorID string)(doctor model.Doctor, err error) {
+	log.Printf("[INFO] FindDoctorByID params doctorID=%s;", doctorID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
