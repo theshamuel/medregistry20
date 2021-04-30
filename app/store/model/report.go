@@ -22,38 +22,11 @@ func ProcessDataDoctorSalaryRecord(visits []Visit) map[string]*DoctorSalaryRecor
 	var res = make(map[string]*DoctorSalaryRecord)
 	for _, visit := range visits {
 		if !visit.DoctorExcludedFromReports {
-			//Because of in total sum for visit pcr could be included once we're using this flag
-			addedPCRPrice := false
 			dsr := res[visit.DoctorID]
 			if dsr == nil {
 				dsr = &DoctorSalaryRecord{ID: visit.DoctorID, DoctorName: visit.DoctorName, Services: make(map[string]ServiceReport)}
 			}
-			for _, service := range visit.Services {
-				if addedPCRPrice && service.Category == "pcr" || service.Category == "mazok"{
-					continue
-				}
-				//Cut off a tail of ID. ID=_id+MEDREG+Random(int). It is necessary for available in visit duplication of services in grid.
-				service.ID = strings.Split(service.ID, "MEDREG")[0]
-				if _, ok := dsr.Services[service.ID]; !ok {
-					//Check if this service should be paid (exclude analizys)
-					if service.DoctorPay > 0  {
-						personalRate, err := calcPersonalRate(service, dsr.ID)
-						if err != nil {
-							log.Printf("[DEBUG] not personal rate for %s; %s", dsr.ID, err.Error())
-						}
-						srv := ServiceReport{ServiceName: service.Name, Count: 1, DoctorRate: service.DoctorPay}
-						if personalRate != nil {
-							srv.DoctorRate = personalRate.DoctorSalary
-						}
-						if service.Category == "pcr" && addedPCRPrice {
-							srv.DoctorRate = 0
-						}
-						dsr.Services[service.ID] = srv
-					}
-				} else {
-					incCountService(dsr, service.ID)
-				}
-			}
+			dsr = mapServices(dsr, visit.Services)
 			//Check that is doctor need by paid for services
 			if len(dsr.Services) > 0 {
 				res[dsr.ID] = dsr
@@ -61,6 +34,40 @@ func ProcessDataDoctorSalaryRecord(visits []Visit) map[string]*DoctorSalaryRecor
 		}
 	}
 	return res
+}
+
+func mapServices(dsr *DoctorSalaryRecord, services []Service) *DoctorSalaryRecord {
+	//Because of in total sum for visit pcr could be included once we're using this flag
+	addedPCRPrice := false
+	for _, service := range services {
+		if addedPCRPrice && service.Category == "pcr" || service.Category == "mazok"{
+			continue
+		}
+		//Cut off a tail of ID. ID=_id+MEDREG+Random(int). It is necessary for available in visit duplication of services in grid.
+		service.ID = strings.Split(service.ID, "MEDREG")[0]
+		if _, ok := dsr.Services[service.ID]; !ok {
+			//Check if this service should be paid (exclude analizys)
+			if service.DoctorPay > 0  {
+				personalRate, err := calcPersonalRate(service, dsr.ID)
+				if err != nil {
+					log.Printf("[DEBUG] not personal rate for %s; %s", dsr.ID, err.Error())
+				}
+				srv := ServiceReport{ServiceName: service.Name, Count: 1, DoctorRate: service.DoctorPay}
+				if personalRate != nil {
+					srv.DoctorRate = personalRate.DoctorSalary
+				}
+				if service.Category == "pcr" && addedPCRPrice {
+					srv.DoctorRate = 0
+				} else if service.Category == "pcr" && !addedPCRPrice{
+					addedPCRPrice = true
+				}
+				dsr.Services[service.ID] = srv
+			}
+			continue
+		}
+		incCountService(dsr, service.ID)
+	}
+	return dsr
 }
 
 func calcPersonalRate(s Service, doctorID string) (*PersonalRate, error) {
