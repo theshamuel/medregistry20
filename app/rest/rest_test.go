@@ -85,6 +85,17 @@ func TestRest_ReportVisitResult(t *testing.T) {
 	}
 }
 
+func TestRest_ReportPeriodByDoctorBetweenDateEvent (t *testing.T) {
+	ts, _, engineMock, teardown := startHTTPServer()
+	defer teardown()
+	_, code := getRequest(t, ts.URL+"/api/v2/reports/file/reportPeriodByDoctor/1/2021-01-01/2021-01-02/test.xlsx")
+	assert.Equal(t, http.StatusOK, code)
+	if len(engineMock.FindVisitByDoctorSinceTillCalls()) != 1 {
+		t.Errorf("[ERROR] ReportPeriodByDoctorBetweenDateEvent was called %d times, FindVisitByDoctorSinceTill was called %d times", len(engineMock.FindVisitByDoctorSinceTillCalls()),
+			len(engineMock.FindVisitByDoctorSinceTillCalls()))
+	}
+}
+
 func startHTTPServer() (ts *httptest.Server, rest *Rest, engineMock *store.EngineInterfaceMock, gracefulTeardown func()) {
 	engineMock = &store.EngineInterfaceMock{
 		FindVisitByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {

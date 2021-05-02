@@ -22,6 +22,7 @@ func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, s
 	f, err := excelize.OpenFile(s.ReportPath + "/templateReportOfWorkPeriodByDoctor.xlsx")
 	if err != nil {
 		log.Printf("[ERROR] Cannot read template templateReportOfWorkPeriodByDoctor.xlsx #%v", err)
+		return nil, err
 	}
 	data := model.ProcessDataDoctorSalaryRecord(visits)
 	numRecordInt := 6
