@@ -21,8 +21,6 @@ type Opts struct {
 }
 
 func main() {
-	setupLogLevel(false)
-	log.Printf("[INFO] Starting Medregistry API v2 version:%s ...\n", version)
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
 	p.CommandHandler = func(command flags.Commander, args []string) error {
@@ -42,9 +40,13 @@ func main() {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
 		} else {
-			os.Exit(1)
+			log.Printf("[ERROR] during parsing flags: %+v", err)
+			os.Exit(3)
 		}
 	}
+	setupLogLevel(opts.Debug)
+	log.Printf("[INFO] Starting Medregistry API v2 version:%s ...\n", version)
+	log.Printf("[DEBUG] list options: %+v", opts)
 }
 
 func setupLogLevel(debug bool) {
