@@ -86,9 +86,9 @@ func generateRndPort() (port int) {
 
 func waitForHTTPServer(port int) {
 	client := http.Client{Timeout: time.Second}
-	for i := 0; i < 5; i++ {
-		time.Sleep(time.Second * 5)
-		if resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", port)); err == nil {
+	for i := 0; i < 1000; i++ {
+		time.Sleep(time.Millisecond * 3)
+		if resp, err := client.Get(fmt.Sprintf("http://localhost:%d/", port)); err == nil {
 			_ = resp.Body.Close()
 			return
 		}
