@@ -29,6 +29,7 @@ linters:
     - nakedret      #Finds naked returns in functions greater than a specified function length
     - prealloc      #Finds slice declarations that could potentially be preallocated
     - staticcheck   #Staticcheck is a go vet on steroids, applying a ton of static analysis checks
+    - govet         #Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
 
 run:
   concurrency: 8
