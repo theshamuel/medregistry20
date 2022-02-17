@@ -73,9 +73,9 @@ func TestGetStackTrace(t *testing.T) {
 }
 
 func generateRndPort() (port int) {
-	for {
+	for i :=0; i < 100; i++ {
 		rand.Seed(time.Now().UnixNano())
-		port = 49001 + int(rand.Int31n(150))
+		port = 50001 + int(rand.Int31n(10000))
 		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
 			_ = ln.Close()
 			break
