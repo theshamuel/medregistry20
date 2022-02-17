@@ -31,8 +31,7 @@ func Test_Main(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	port := generateRndPort()
-	fmt.Println(port)
-	os.Args = []string{"test", "server", "--port=" + strconv.Itoa(port), "reportsPath=./reports", "--apiV1url=https://medregistry/api/v1/", "--debug"}
+	os.Args = []string{"test", "server", "--port=" + strconv.Itoa(port), "--reportsPath=./reports", "--apiV1url=https://medregistry/api/v1/", "--debug"}
 	done := make(chan struct{})
 	go func() {
 		<-done
@@ -41,7 +40,6 @@ func Test_Main(t *testing.T) {
 	}()
 
 	finished := make(chan struct{})
-
 
 	go func() {
 		main()
