@@ -110,9 +110,8 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 		r := &store.Remote{URI: sc.MedregAPIV1URL}
 		return r, nil
 	default:
-		return nil, errors.Errorf("unsupported store type %s", sc.StoreEngine.Type)
+		return nil, errors.Errorf("can't initialize data store, unsupported store type %s", sc.StoreEngine.Type)
 	}
-	return result, errors.Wrap(err, "can't initialize data store")
 }
 
 // Wait for application completion (termination)
