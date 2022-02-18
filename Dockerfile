@@ -4,6 +4,8 @@ ARG VER
 ARG SKIP_TESTS
 ENV GOFLAGS="-mod=vendor"
 
+LABEL org.opencontainers.image.source https://github.com/theshamuel/medregistry20
+
 RUN apk --no-cache add tzdata zip ca-certificates git
 
 ADD . /build/medregestry20
