@@ -29,7 +29,7 @@ RUN \
     if [ -n "$VER" ] ; then \
     version=${VER}_$(date +%Y%m%d-%H:%M:%S); fi; \
     echo "version=$version"; \
-    go build -mod=vendor  -o medregestry20 -ldflags "-X main.version=${version} -s -w" ./app
+    go build -o medregestry20 -ldflags "-X main.version=${version} -s -w" ./app
 
 FROM ghcr.io/theshamuel/baseimg-go-app:1.0-alpine3.13
 
