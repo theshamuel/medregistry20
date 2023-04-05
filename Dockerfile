@@ -1,4 +1,4 @@
-FROM ghcr.io/theshamuel/baseimg-go-build:1.16.4 as builder
+FROM ghcr.io/theshamuel/baseimg-go-build:1.20.1 as builder
 
 ARG VER
 ARG SKIP_TESTS
@@ -31,7 +31,7 @@ RUN \
     echo "version=$version"; \
     go build -o medregestry20 -ldflags "-X main.version=${version} -s -w" ./app
 
-FROM ghcr.io/theshamuel/baseimg-go-app:1.0-alpine3.13
+FROM ghcr.io/theshamuel/baseimg-go-app:1.0-alpine3.17
 
 WORKDIR /srv
 COPY --from=builder /build/medregestry20/medregestry20 /srv/medregestry20

@@ -1,6 +1,6 @@
 module github.com/theshamuel/medregistry20
 
-go 1.14
+go 1.20
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
@@ -17,6 +17,11 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-pkgz/expirable-cache v0.0.3 // indirect
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
+	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
