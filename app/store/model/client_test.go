@@ -1,11 +1,21 @@
+//go:build unit
 package model
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestClientSetAgePostfix(t *testing.T)  {
+type ClientTestSuite struct {
+	suite.Suite
+	message string
+}
+
+func TestClientTestSuite(t *testing.T)  {
+	suite.Run(t, new(ClientTestSuite))
+}
+func (s *ClientTestSuite) TestClientSetAgePostfix()  {
 	tbl := []struct {
 		c   Client
 		res string
@@ -23,6 +33,6 @@ func TestClientSetAgePostfix(t *testing.T)  {
 	}
 	for i, tt := range tbl {
 		tt.c.SetAgePostfix()
-		assert.Equal(t, tt.res, tt.c.AgePostfix, "test case #%d", i)
+		assert.Equal(s.T(), tt.res, tt.c.AgePostfix, "test case #%d", i)
 	}
 }
