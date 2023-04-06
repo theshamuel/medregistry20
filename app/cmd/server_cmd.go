@@ -21,8 +21,10 @@ type ServerCommand struct {
 }
 
 type StoreGroup struct {
-	Type   string      `long:"type" env:"TYPE" description:"type of storage" choice:"Remote" default:"Remote"`
+	Type   string      `long:"type" env:"TYPE" description:"type of storage" choice:"Remote,Mongo,Mix" default:"Mix"`
 	Remote RemoteGroup `group:"Remote" namespace:"Remote" env-namespace:"Remote"`
+	Mongo  MongoGroup  `group:"Mongo" namespace:"Mongo" env-namespace:"Mongo"`
+	Mix    MixGroup    `group:"Mix" namespace:"Mix" env-namespace:"Mix"`
 }
 
 type RemoteGroup struct {
@@ -32,6 +34,14 @@ type RemoteGroup struct {
 	AuthPassword string        `long:"auth_passwd" env:"AUTH_PASSWD" description:"basic auth user password"`
 }
 
+type MongoGroup struct {
+}
+
+type MixGroup struct {
+	RemoteGroup
+	MongoGroup
+}
+
 type application struct {
 	*ServerCommand
 	rest        *rest.Rest
@@ -39,7 +49,7 @@ type application struct {
 	terminated  chan struct{}
 }
 
-//Execute is the entry point for server command
+// Execute is the entry point for server command
 func (sc *ServerCommand) Execute(_ []string) error {
 	log.Printf("[INFO] start app server")
 	ctx, cancel := context.WithCancel(context.Background())
@@ -69,8 +79,7 @@ func (app *application) run(ctx context.Context) error {
 		<-ctx.Done()
 		app.rest.Shutdown()
 		log.Print("[INFO] shutdown is completed")
-		if e := app.dataService.Close()
-			e != nil {
+		if e := app.dataService.Close(); e != nil {
 			log.Printf("[WARN] failed to close data store, %s", e)
 		}
 	}()
@@ -108,6 +117,14 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 	switch sc.StoreEngine.Type {
 	case "Remote":
 		r := &store.Remote{URI: sc.MedregAPIV1URL}
+		return r, nil
+	case "Mongo":
+		return nil, errors.Errorf("not implemented yet")
+	case "Mix":
+		r := &store.Mix{
+			URI:         sc.MedregAPIV1URL,
+			MongoClient: nil,
+		}
 		return r, nil
 	default:
 		return nil, errors.Errorf("can't initialize data store, unsupported store type %s", sc.StoreEngine.Type)
