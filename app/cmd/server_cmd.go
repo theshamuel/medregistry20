@@ -6,6 +6,8 @@ import (
 	"github.com/theshamuel/medregistry20/app/rest"
 	"github.com/theshamuel/medregistry20/app/service"
 	"github.com/theshamuel/medregistry20/app/store"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"os"
 	"os/signal"
@@ -14,14 +16,18 @@ import (
 )
 
 type ServerCommand struct {
-	StoreEngine StoreGroup `group:"store" namespace:"store" env-namespace:"STORE"`
-	Version     string
-	Port        int `long:"port" env:"SERVER_PORT" default:"9002" description:"application port"`
-	CommonOptions
+	StoreEngine    StoreGroup `group:"store" namespace:"store" env-namespace:"STORE"`
+	MongoURL       string     `long:"mongo-url" env:"MONGO_URL" default:"mongodb://medregdb:27017" description:"url to connect to mongo db server"`
+	MongoUsername  string     `long:"mongo-username" env:"MONGO_USERNAME" default:"admin" description:"username to connect to mongo db server"`
+	MongoPassword  string     `long:"mongo-password" env:"MONGO_PASSWORD" default:"admin" description:"password to connect to mongo db server "`
+	MedregAPIV1URL string     `long:"apiV1url" env:"MEDREG_API_V1_URL" default:"http://localhost:9000/api/v1/" description:"url to medregestry api v1 "`
+	ReportsPath    string     `long:"reportsPath" env:"REPORT_PATH" required:"true" default:"./reports" description:"file system path to root report folder"`
+	Port           int        `long:"port" env:"SERVER_PORT" default:"9002" description:"application port"`
+	Version        string
 }
 
 type StoreGroup struct {
-	Type   string      `long:"type" env:"TYPE" description:"type of storage" choice:"Remote,Mongo,Mix" default:"Mix"`
+	Type   string      `long:"type" env:"STORE_TYPE" description:"type of storage" choice:"Remote" choice:"Mongo" choice:"Mix" default:"Remote"`
 	Remote RemoteGroup `group:"Remote" namespace:"Remote" env-namespace:"Remote"`
 	Mongo  MongoGroup  `group:"Mongo" namespace:"Mongo" env-namespace:"Mongo"`
 	Mix    MixGroup    `group:"Mix" namespace:"Mix" env-namespace:"Mix"`
@@ -52,6 +58,14 @@ type application struct {
 // Execute is the entry point for server command
 func (sc *ServerCommand) Execute(_ []string) error {
 	log.Printf("[INFO] start app server")
+	log.Printf("[INFO] server args:\n"+
+		"		port: %d;\n"+
+		"		report path: %s;\n"+
+		"		mongoURL %s;\n"+
+		"		medregAPIV1URL: %s;\n"+
+		"		store engine type: %s;\n",
+		sc.Port, sc.ReportsPath, sc.MongoURL, sc.MedregAPIV1URL, sc.StoreEngine.Type)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		stop := make(chan os.Signal, 1)
@@ -112,7 +126,7 @@ func (sc *ServerCommand) bootstrapApp() (*application, error) {
 }
 
 func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err error) {
-	log.Printf("[INFO] build data engine store. Type=%s", sc.StoreEngine.Type)
+	log.Printf("[DEBUG] build data engine store. Type=%s", sc.StoreEngine.Type)
 
 	switch sc.StoreEngine.Type {
 	case "Remote":
@@ -121,9 +135,20 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 	case "Mongo":
 		return nil, errors.Errorf("not implemented yet")
 	case "Mix":
+		credential := options.Credential{
+			AuthSource: "medregDB",
+			Username:   sc.MongoUsername,
+			Password:   sc.MongoPassword,
+		}
+		clientOpts := options.Client().ApplyURI(sc.MongoURL).
+			SetAuth(credential)
+		client, err := mongo.Connect(context.Background(), clientOpts)
+		if err != nil {
+			return nil, errors.Errorf("can't initialize data store because failed to establish mongo connection: %s", sc.StoreEngine.Type)
+		}
 		r := &store.Mix{
 			URI:         sc.MedregAPIV1URL,
-			MongoClient: nil,
+			MongoClient: client,
 		}
 		return r, nil
 	default:

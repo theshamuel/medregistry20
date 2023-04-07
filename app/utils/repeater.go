@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -16,13 +16,14 @@ type Token struct {
 	Name  string `json:"name"`
 	Token string `json:"token"`
 }
+
 type Repeater struct {
-	ClientTimeout  time.Duration
-	Attempts	   time.Duration
-	URI            string
-	Headers		   http.Header
-	Body		   string
-	Count          int
+	ClientTimeout time.Duration
+	Attempts      time.Duration
+	URI           string
+	Headers       http.Header
+	Body          string
+	Count         int
 }
 
 func (r *Repeater) Get() ([]byte, error) {
@@ -74,7 +75,7 @@ func (r *Repeater) Get() ([]byte, error) {
 		return nil, err
 	}
 
-	res, err = ioutil.ReadAll(response.Body)
+	res, err = io.ReadAll(response.Body)
 	if err != nil {
 		log.Printf("[ERROR] can not read response body %#v", err)
 		return nil, err

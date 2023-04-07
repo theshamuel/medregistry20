@@ -40,7 +40,7 @@ func createAppFromCmd(t *testing.T, cmd ServerCommand) (*application, context.Co
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	return app, ctx, cancel
 }
 
@@ -57,10 +57,6 @@ func waitHTTPServer(port int) {
 
 func buildListCmdOpts(t *testing.T, fn func(o ServerCommand) ServerCommand) (*application, context.Context, context.CancelFunc) {
 	cmd := ServerCommand{}
-	cmd.SetCommon(CommonOptions{
-		MedregAPIV1URL: "http://localhost:8081/api/v1/",
-		ReportsPath: "/srv/reports/",
-	})
 	p := flags.NewParser(&cmd, flags.Default)
 	_, err := p.ParseArgs([]string{"--port=4356"})
 	require.NoError(t, err)

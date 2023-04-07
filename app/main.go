@@ -14,28 +14,15 @@ import (
 var version = "unknown"
 
 type Opts struct {
-	ServerCmd      cmd.ServerCommand `command:"server"`
-	MedregAPIV1URL string            `long:"apiV1url" env:"MEDREG_API_V1_URL" default:"http://localhost:9000/api/v1/" description:"url to medregestry api v1 "`
-	ReportsPath    string            `long:"reportsPath" env:"REPORT_PATH" required:"true" default:"./reports" description:"file system path to root report folder"`
-	Debug          bool              `long:"debug" env:"DEBUG" description:"debug mode"`
+	ServerCmd cmd.ServerCommand `command:"server"`
+	Debug     bool              `long:"debug" env:"DEBUG" description:"debug mode"`
 }
 
 func main() {
+	log.Printf("[INFO] Starting Medregistry API v2 version: %s\n", version)
 	var opts Opts
 	p := flags.NewParser(&opts, flags.Default)
-	p.CommandHandler = func(command flags.Commander, args []string) error {
-		setupLogLevel(opts.Debug)
-		c := command.(cmd.CommonOptionsCommander)
-		c.SetCommon(cmd.CommonOptions{
-			MedregAPIV1URL: opts.MedregAPIV1URL,
-			ReportsPath:    opts.ReportsPath,
-		})
-		err := c.Execute(args)
-		if err != nil {
-			log.Printf("[ERROR] failed with %v", err)
-		}
-		return err
-	}
+	setupLogLevel(opts.Debug)
 	if _, err := p.Parse(); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
@@ -44,9 +31,6 @@ func main() {
 			os.Exit(3)
 		}
 	}
-	setupLogLevel(opts.Debug)
-	log.Printf("[INFO] Starting Medregistry API v2 version:%s ...\n", version)
-	log.Printf("[DEBUG] list options: %+v", opts)
 }
 
 func setupLogLevel(debug bool) {
