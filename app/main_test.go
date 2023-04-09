@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-func TestMain(m *testing.M)  {
+func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m,
 		goleak.IgnoreTopFunction("github.com/theshamuel/medregistry20/app.init.0.func1"),
 		goleak.IgnoreTopFunction("net/http.(*Server).Shutdown"))
@@ -71,8 +71,8 @@ func TestGetStackTrace(t *testing.T) {
 }
 
 func generateRndPort() (port int) {
-	for i :=0; i < 100; i++ {
-		rand.Seed(time.Now().UnixNano())
+	for i := 0; i < 100; i++ {
+		rand.New(rand.NewSource(time.Now().UnixNano()))
 		port = 50001 + int(rand.Int31n(10000))
 		if ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err == nil {
 			_ = ln.Close()
