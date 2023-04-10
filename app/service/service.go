@@ -370,12 +370,37 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		}
 	} else {
 		f.SetCellStyle(sheetName, "C42", "D42", genderCellRedStyle)
-		f.SetCellStyle(sheetName, "C47", "D47", familyRelationCellRedlStyle)
+		switch req.RelationPayerToClient {
+		case "spouse":
+			f.SetCellStyle(sheetName, "E47", "E47", familyRelationCellNormalStyle)
+			break
+		case "son":
+			f.SetCellStyle(sheetName, "F47", "F47", familyRelationCellNormalStyle)
+			break
+		case "daughter":
+			f.SetCellStyle(sheetName, "G47", "G47", familyRelationCellNormalStyle)
+			break
+		case "mother":
+			f.SetCellStyle(sheetName, "H47", "H47", familyRelationCellNormalStyle)
+			break
+		case "father":
+			f.SetCellStyle(sheetName, "I47", "I47", familyRelationCellNormalStyle)
+			break
+		default:
+			f.SetCellStyle(sheetName, "C47", "I47", familyRelationCellRedlStyle)
+			break
+		}
 	}
 
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
-		log.Printf("[ERROR] Cannot convert file to bytes")
+		log.Printf("[ERROR] cannot convert file to bytes")
+		return nil, err
+	}
+
+	err = s.Engine.IncrementNalogSpravkaSeq(numberOfNalogSpravka + 1)
+	if err != nil {
+		log.Printf("[ERROR] cannot increment number of sequence for nalog spravka report")
 	}
 	return res, nil
 }
