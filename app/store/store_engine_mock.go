@@ -39,6 +39,12 @@ var _ EngineInterface = &EngineInterfaceMock{}
 //			FindVisitsByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
 //				panic("mock out the FindVisitsByDoctorSinceTill method")
 //			},
+//			GetNalogSpravkaSeqFunc: func() (int, error) {
+//				panic("mock out the GetNalogSpravkaSeq method")
+//			},
+//			IncrementNalogSpravkaSeqFunc: func(idx int) error {
+//				panic("mock out the IncrementNalogSpravkaSeq method")
+//			},
 //		}
 //
 //		// use mockedEngineInterface in code that requires EngineInterface
@@ -66,6 +72,12 @@ type EngineInterfaceMock struct {
 
 	// FindVisitsByDoctorSinceTillFunc mocks the FindVisitsByDoctorSinceTill method.
 	FindVisitsByDoctorSinceTillFunc func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error)
+
+	// GetNalogSpravkaSeqFunc mocks the GetNalogSpravkaSeq method.
+	GetNalogSpravkaSeqFunc func() (int, error)
+
+	// IncrementNalogSpravkaSeqFunc mocks the IncrementNalogSpravkaSeq method.
+	IncrementNalogSpravkaSeqFunc func(idx int) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -108,6 +120,14 @@ type EngineInterfaceMock struct {
 			// EndDateEvent is the endDateEvent argument value.
 			EndDateEvent string
 		}
+		// GetNalogSpravkaSeq holds details about calls to the GetNalogSpravkaSeq method.
+		GetNalogSpravkaSeq []struct {
+		}
+		// IncrementNalogSpravkaSeq holds details about calls to the IncrementNalogSpravkaSeq method.
+		IncrementNalogSpravkaSeq []struct {
+			// Idx is the idx argument value.
+			Idx int
+		}
 	}
 	lockClose                         sync.RWMutex
 	lockCompanyDetail                 sync.RWMutex
@@ -116,6 +136,8 @@ type EngineInterfaceMock struct {
 	lockFindVisitByID                 sync.RWMutex
 	lockFindVisitsByClientIDSinceTill sync.RWMutex
 	lockFindVisitsByDoctorSinceTill   sync.RWMutex
+	lockGetNalogSpravkaSeq            sync.RWMutex
+	lockIncrementNalogSpravkaSeq      sync.RWMutex
 }
 
 // Close calls CloseFunc.
@@ -345,5 +367,64 @@ func (mock *EngineInterfaceMock) FindVisitsByDoctorSinceTillCalls() []struct {
 	mock.lockFindVisitsByDoctorSinceTill.RLock()
 	calls = mock.calls.FindVisitsByDoctorSinceTill
 	mock.lockFindVisitsByDoctorSinceTill.RUnlock()
+	return calls
+}
+
+// GetNalogSpravkaSeq calls GetNalogSpravkaSeqFunc.
+func (mock *EngineInterfaceMock) GetNalogSpravkaSeq() (int, error) {
+	if mock.GetNalogSpravkaSeqFunc == nil {
+		panic("EngineInterfaceMock.GetNalogSpravkaSeqFunc: method is nil but EngineInterface.GetNalogSpravkaSeq was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockGetNalogSpravkaSeq.Lock()
+	mock.calls.GetNalogSpravkaSeq = append(mock.calls.GetNalogSpravkaSeq, callInfo)
+	mock.lockGetNalogSpravkaSeq.Unlock()
+	return mock.GetNalogSpravkaSeqFunc()
+}
+
+// GetNalogSpravkaSeqCalls gets all the calls that were made to GetNalogSpravkaSeq.
+// Check the length with:
+//
+//	len(mockedEngineInterface.GetNalogSpravkaSeqCalls())
+func (mock *EngineInterfaceMock) GetNalogSpravkaSeqCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockGetNalogSpravkaSeq.RLock()
+	calls = mock.calls.GetNalogSpravkaSeq
+	mock.lockGetNalogSpravkaSeq.RUnlock()
+	return calls
+}
+
+// IncrementNalogSpravkaSeq calls IncrementNalogSpravkaSeqFunc.
+func (mock *EngineInterfaceMock) IncrementNalogSpravkaSeq(idx int) error {
+	if mock.IncrementNalogSpravkaSeqFunc == nil {
+		panic("EngineInterfaceMock.IncrementNalogSpravkaSeqFunc: method is nil but EngineInterface.IncrementNalogSpravkaSeq was just called")
+	}
+	callInfo := struct {
+		Idx int
+	}{
+		Idx: idx,
+	}
+	mock.lockIncrementNalogSpravkaSeq.Lock()
+	mock.calls.IncrementNalogSpravkaSeq = append(mock.calls.IncrementNalogSpravkaSeq, callInfo)
+	mock.lockIncrementNalogSpravkaSeq.Unlock()
+	return mock.IncrementNalogSpravkaSeqFunc(idx)
+}
+
+// IncrementNalogSpravkaSeqCalls gets all the calls that were made to IncrementNalogSpravkaSeq.
+// Check the length with:
+//
+//	len(mockedEngineInterface.IncrementNalogSpravkaSeqCalls())
+func (mock *EngineInterfaceMock) IncrementNalogSpravkaSeqCalls() []struct {
+	Idx int
+} {
+	var calls []struct {
+		Idx int
+	}
+	mock.lockIncrementNalogSpravkaSeq.RLock()
+	calls = mock.calls.IncrementNalogSpravkaSeq
+	mock.lockIncrementNalogSpravkaSeq.RUnlock()
 	return calls
 }

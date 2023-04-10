@@ -135,6 +135,14 @@ func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, 
 	return nil, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine yet")
 }
 
+func (s *Remote) GetNalogSpravkaSeq() (int, error) {
+	return 0, errors.New("not implemented yet")
+}
+
+func (s *Remote) IncrementNalogSpravkaSeq(idx int) error {
+	return errors.New("not implemented yet")
+}
+
 func (s *Remote) Close() error {
 	log.Printf("[INFO] Close Remote")
 	return nil

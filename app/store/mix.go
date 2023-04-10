@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -185,6 +186,22 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 	}
 
 	return res, nil
+}
+
+func (s *Mix) GetNalogSpravkaSeq() (int, error) {
+	filter := bson.M{"code": "nalogSpravkaNum"}
+	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
+
+	var seq SequenceModel
+	if err := sequenceCollection.FindOne(context.Background(), filter).Decode(&seq); err != nil {
+		return -1, err
+	}
+
+	return seq.Seq, nil
+}
+
+func (s *Mix) IncrementNalogSpravkaSeq(idx int) error {
+	return errors.New("not implemented yet")
 }
 
 func (s *Mix) Close() error {

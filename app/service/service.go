@@ -4,6 +4,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/theshamuel/medregistry20/app/store"
 	"github.com/theshamuel/medregistry20/app/store/model"
+	"github.com/theshamuel/medregistry20/app/utils"
 	"log"
 	"os"
 	"strconv"
@@ -258,15 +259,21 @@ func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
 		}
 	}
 
+	numberOfNalogSpravka, err := s.Engine.GetNalogSpravkaSeq()
+	if err != nil {
+		log.Printf("[ERROR] cannot get numberOfNalogSpravka #%v", err)
+		return nil, err
+	}
+
 	sheetName := f.GetSheetName(1)
 
 	//Fill up number
 	numberCell := f.GetCellValue(sheetName, "B9")
-	numberCell = strings.ReplaceAll(numberCell, "[number]", "123")
+	numberCell = strings.ReplaceAll(numberCell, "[number]", strconv.Itoa(numberOfNalogSpravka))
 	f.SetCellStr(sheetName, "B9", numberCell)
 
 	numberCell = f.GetCellValue(sheetName, "B37")
-	numberCell = strings.ReplaceAll(numberCell, "[number]", "123")
+	numberCell = strings.ReplaceAll(numberCell, "[number]", strconv.Itoa(numberOfNalogSpravka))
 	f.SetCellStr(sheetName, "B37", numberCell)
 
 	//Fill up total sum
@@ -277,6 +284,18 @@ func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
 	totalSumAndCurrencyCell := f.GetCellValue(sheetName, "J42")
 	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", strconv.Itoa(superTotalSum))
 	f.SetCellStr(sheetName, "J42", totalSumAndCurrencyCell)
+
+	//Fill up release date
+	today := time.Now()
+	releaseDateCell := f.GetCellValue(sheetName, "FC21")
+	releaseDateCell = strings.ReplaceAll(releaseDateCell, "[releaseDate]", today.Format("01.02.2006"))
+	f.SetCellStr(sheetName, "F21", releaseDateCell)
+
+	releaseDateWithMonthWordCell := f.GetCellValue(sheetName, "C38")
+	releaseDateWithMonthWordCell = strings.ReplaceAll(releaseDateWithMonthWordCell, "[dayOfReleaseDate]", strconv.Itoa(today.Day()))
+	releaseDateWithMonthWordCell = strings.ReplaceAll(releaseDateWithMonthWordCell, "[monthOfReleaseDateWord]", utils.GetMonthWordByOrderNumber(today.Month()))
+	releaseDateWithMonthWordCell = strings.ReplaceAll(releaseDateWithMonthWordCell, "[yearOfReleaseDate]", strconv.Itoa(today.Year()))
+	f.SetCellStr(sheetName, "C38", releaseDateWithMonthWordCell)
 
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {

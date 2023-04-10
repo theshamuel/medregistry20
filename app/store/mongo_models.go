@@ -24,6 +24,12 @@ type ServiceModel struct {
 	Category string `bson:"category,omitempty"`
 }
 
+type SequenceModel struct {
+	ID   primitive.ObjectID `bson:"_id,omitempty"`
+	Code string             `bson:"code,omitempty"`
+	Seq  int                `bson:"seq,omitempty"`
+}
+
 func (v *VisitModel) CalculateTotalSum() int {
 	res := 0
 	for _, s := range v.Services {
