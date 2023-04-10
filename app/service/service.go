@@ -21,9 +21,9 @@ type ReportNalogSpravkaReq struct {
 	ClientID              string
 	DateFrom              string
 	DateTo                string
-	FIOPayer              string
+	PayerFIO              string
 	RelationPayerToClient string
-	isClientSelfPayer     bool
+	IsClientSelfPayer     bool
 }
 
 func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, startDateEvent, endDateEvent string) ([]byte, error) {
@@ -92,7 +92,7 @@ func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, s
 	if err != nil {
 		log.Printf("[ERROR] Cannot convert file to bytes")
 	}
-
+	//В том, что он (она) оплатил(а) медицинские услуги стоимостью
 	return res, nil
 }
 
@@ -227,6 +227,11 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 			strings.Title(strings.ToLower(doctor.Middlename)))
 	f.SetCellStr(sheetName, "J40", fioDoctorCell)
 
+	//Fill up gender
+	genderCellStyle, err := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+												"font":{"bold":false,"family":"Times New Roman","size":12,"color":"#000000"},
+												"border":[{"type":"left","color":"000000","style":1},{"type":"top","color":"000000","style":1},{"type":"bottom","color":"000000","style":1},{"type":"right","color":"0000000","style":1}]}`)
+
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
 		log.Printf("[ERROR] cannot convert file to bytes")
@@ -234,14 +239,14 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 	return res, nil
 }
 
-func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
+func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, error) {
 	f, err := excelize.OpenFile(s.ReportPath + "/templateNalogSpravka.xlsx")
 	if err != nil {
 		log.Printf("[ERROR] cannot read template templateNalogSpravka.xlsx #%v", err)
 		return nil, err
 	}
 
-	visits, err := s.Engine.FindVisitsByClientIDSinceTill("5bee6e2c24aa9a0007bec7b6", "2022-01-01", "2022-12-31")
+	visits, err := s.Engine.FindVisitsByClientIDSinceTill(req.ClientID, req.DateFrom, req.DateTo)
 	if err != nil {
 		log.Printf("[ERROR] cannot get client visits #%v", err)
 		return nil, err
@@ -252,10 +257,10 @@ func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
 	for i, v := range visits {
 		superTotalSum = superTotalSum + v.TotalSum
 		if i < len(visits)-1 {
-			visitDatesStr.WriteString(v.DateEvent.Format("01.02.2006"))
-			visitDatesStr.WriteString(",")
+			visitDatesStr.WriteString(v.DateEvent.Format("02.01.2006"))
+			visitDatesStr.WriteString(", ")
 		} else {
-			visitDatesStr.WriteString(v.DateEvent.Format("01.02.2006"))
+			visitDatesStr.WriteString(v.DateEvent.Format("02.01.2006"))
 		}
 	}
 
@@ -265,7 +270,28 @@ func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
 		return nil, err
 	}
 
+	company, _ := s.Engine.CompanyDetail()
+
+	payerName := visits[0].ClientSurname + " " + visits[0].ClientName + " " + visits[0].ClientMiddlename
+	if !req.IsClientSelfPayer {
+		payerName = req.PayerFIO
+	}
+
 	sheetName := f.GetSheetName(1)
+
+	//Fill up payer FIO
+	payerFIOCell := f.GetCellValue(sheetName, "F13")
+	payerFIOCell = strings.ReplaceAll(payerFIOCell, "[payerFio]", payerName)
+	f.SetCellStr(sheetName, "F13", payerFIOCell)
+
+	payerFIOCell = f.GetCellValue(sheetName, "F40")
+	payerFIOCell = strings.ReplaceAll(payerFIOCell, "[payerFio]", payerName)
+	f.SetCellStr(sheetName, "F40", payerFIOCell)
+
+	//Fill up license cell
+	licenseCell := f.GetCellValue(sheetName, "A30")
+	licenseCell = strings.ReplaceAll(licenseCell, "[orgLicenceNumber]", company.License)
+	f.SetCellStr(sheetName, "A30", licenseCell)
 
 	//Fill up number
 	numberCell := f.GetCellValue(sheetName, "B9")
@@ -282,8 +308,17 @@ func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
 	f.SetCellStr(sheetName, "H17", totalSumCell)
 
 	totalSumAndCurrencyCell := f.GetCellValue(sheetName, "J42")
-	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", strconv.Itoa(superTotalSum))
+	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", strconv.Itoa(superTotalSum)+" "+utils.GetCurrencySuffix(superTotalSum%10))
 	f.SetCellStr(sheetName, "J42", totalSumAndCurrencyCell)
+
+	//Fill up visit dates
+	visitDatesCell := f.GetCellValue(sheetName, "D19")
+	visitDatesCell = strings.ReplaceAll(visitDatesCell, "[visitDates]", visitDatesStr.String())
+	f.SetCellStr(sheetName, "D19", visitDatesCell)
+
+	visitDatesCell = f.GetCellValue(sheetName, "C53")
+	visitDatesCell = strings.ReplaceAll(visitDatesCell, "[visitDates]", visitDatesStr.String())
+	f.SetCellStr(sheetName, "C53", visitDatesCell)
 
 	//Fill up release date
 	today := time.Now()

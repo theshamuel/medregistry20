@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -177,10 +178,13 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 
 	for _, vb := range visitsBson {
 		res = append(res, model.Visit{
-			ID:        vb.ID.Hex(),
-			ClientID:  vb.Client.ID.Hex(),
-			TotalSum:  vb.CalculateTotalSum(),
-			DateEvent: vb.DateEvent.Time(),
+			ID:               vb.ID.Hex(),
+			ClientID:         vb.Client.ID.Hex(),
+			TotalSum:         vb.CalculateTotalSum(),
+			DateEvent:        vb.DateEvent.Time(),
+			ClientName:       strings.Title(strings.ToLower(vb.Client.Name)),
+			ClientSurname:    strings.Title(strings.ToLower(vb.Client.Surname)),
+			ClientMiddlename: strings.Title(strings.ToLower(vb.Client.Middlename)),
 		})
 
 	}

@@ -14,7 +14,11 @@ type VisitModel struct {
 }
 
 type ClientModel struct {
-	ID primitive.ObjectID `bson:"_id,omitempty"`
+	ID         primitive.ObjectID `bson:"_id,omitempty"`
+	Name       string             `bson:"name,omitempty"`
+	Surname    string             `bson:"surname,omitempty"`
+	Middlename string             `bson:"middlename,omitempty"`
+	Gender     string             `bson:"gender,omitempty"`
 }
 
 type ServiceModel struct {

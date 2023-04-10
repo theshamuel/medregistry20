@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Visit struct {
 	ID                        string    `json:"id"`
@@ -11,8 +13,11 @@ type Visit struct {
 	TotalSum                  int       `json:"totalSum"`
 	Services                  []Service `json:"services"`
 	DateEventStr              string    `json:"dateEvent"`
+	Diagnosis                 string    `json:"diagnosis"`
+	AdditionalExamination     string    `json:"additionalExamination"`
+	Therapy                   string    `json:"therapy"`
+	ClientName                string
+	ClientSurname             string
+	ClientMiddlename          string
 	DateEvent                 time.Time
-	Diagnosis                 string `json:"diagnosis"`
-	AdditionalExamination     string `json:"additionalExamination"`
-	Therapy                   string `json:"therapy"`
 }

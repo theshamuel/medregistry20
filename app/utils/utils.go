@@ -19,6 +19,23 @@ var months = map[time.Month]string{
 	time.December:  "декабря",
 }
 
+var currencySuffix = map[int]string{
+	0: "рублей",
+	1: "рубль",
+	2: "рубля",
+	3: "рубля",
+	4: "рубля",
+	5: "рублей",
+	6: "рублей",
+	7: "рублей",
+	8: "рублей",
+	9: "рублей",
+}
+
 func GetMonthWordByOrderNumber(month time.Month) string {
 	return months[month]
+}
+
+func GetCurrencySuffix(units int) string {
+	return currencySuffix[units]
 }
