@@ -185,6 +185,7 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 			ClientName:       strings.Title(strings.ToLower(vb.Client.Name)),
 			ClientSurname:    strings.Title(strings.ToLower(vb.Client.Surname)),
 			ClientMiddlename: strings.Title(strings.ToLower(vb.Client.Middlename)),
+			ClientGender:     vb.Client.Gender,
 		})
 
 	}

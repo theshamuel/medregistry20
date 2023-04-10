@@ -19,5 +19,6 @@ type Visit struct {
 	ClientName                string
 	ClientSurname             string
 	ClientMiddlename          string
+	ClientGender              string
 	DateEvent                 time.Time
 }

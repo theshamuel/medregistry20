@@ -227,11 +227,6 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 			strings.Title(strings.ToLower(doctor.Middlename)))
 	f.SetCellStr(sheetName, "J40", fioDoctorCell)
 
-	//Fill up gender
-	genderCellStyle, err := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
-												"font":{"bold":false,"family":"Times New Roman","size":12,"color":"#000000"},
-												"border":[{"type":"left","color":"000000","style":1},{"type":"top","color":"000000","style":1},{"type":"bottom","color":"000000","style":1},{"type":"right","color":"0000000","style":1}]}`)
-
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
 		log.Printf("[ERROR] cannot convert file to bytes")
@@ -245,11 +240,31 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		log.Printf("[ERROR] cannot read template templateNalogSpravka.xlsx #%v", err)
 		return nil, err
 	}
+	sheetName := f.GetSheetName(1)
 
 	visits, err := s.Engine.FindVisitsByClientIDSinceTill(req.ClientID, req.DateFrom, req.DateTo)
 	if err != nil {
 		log.Printf("[ERROR] cannot get client visits #%v", err)
 		return nil, err
+	}
+
+	commonCellRedStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"center"},
+										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
+										}`)
+
+	if len(visits) == 0 {
+		visitDatesCell := f.GetCellValue(sheetName, "D19")
+		visitDatesCell = strings.ReplaceAll(visitDatesCell, "[visitDates]", "ВИЗИТЫ ЗА УКАЗАННЫЙ ПЕРИОД ОТСУТСТВУЮТ")
+		f.SetCellStr(sheetName, "D19", visitDatesCell)
+
+		visitDatesCell = f.GetCellValue(sheetName, "C53")
+		visitDatesCell = strings.ReplaceAll(visitDatesCell, "[visitDates]", "ВИЗИТЫ ЗА УКАЗАННЫЙ ПЕРИОД ОТСУТСТВУЮТ")
+		f.SetCellStr(sheetName, "C53", visitDatesCell)
+
+		f.SetCellStyle(sheetName, "D19", "D19", commonCellRedStyle)
+		f.SetCellStyle(sheetName, "C53", "C53", commonCellRedStyle)
+		res, _ := ConvertExcelFileToBytes(f)
+		return res, nil
 	}
 
 	superTotalSum := 0
@@ -276,8 +291,6 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 	if !req.IsClientSelfPayer {
 		payerName = req.PayerFIO
 	}
-
-	sheetName := f.GetSheetName(1)
 
 	//Fill up payer FIO
 	payerFIOCell := f.GetCellValue(sheetName, "F13")
@@ -331,6 +344,34 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 	releaseDateWithMonthWordCell = strings.ReplaceAll(releaseDateWithMonthWordCell, "[monthOfReleaseDateWord]", utils.GetMonthWordByOrderNumber(today.Month()))
 	releaseDateWithMonthWordCell = strings.ReplaceAll(releaseDateWithMonthWordCell, "[yearOfReleaseDate]", strconv.Itoa(today.Year()))
 	f.SetCellStr(sheetName, "C38", releaseDateWithMonthWordCell)
+
+	//Fill up gender
+	genderCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#000000" }
+										}`)
+	familyRelationCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#000000" }
+										}`)
+	familyRelationCellRedlStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
+										}`)
+
+	genderCellRedStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
+										}`)
+
+	if req.IsClientSelfPayer {
+		if visits[0].ClientGender == "woman" {
+			f.SetCellStyle(sheetName, "D42", "D42", genderCellNormalStyle)
+			f.SetCellStyle(sheetName, "D47", "D47", familyRelationCellNormalStyle)
+		} else {
+			f.SetCellStyle(sheetName, "C42", "C42", genderCellNormalStyle)
+			f.SetCellStyle(sheetName, "C47", "C47", familyRelationCellNormalStyle)
+		}
+	} else {
+		f.SetCellStyle(sheetName, "C42", "D42", genderCellRedStyle)
+		f.SetCellStyle(sheetName, "C47", "D47", familyRelationCellRedlStyle)
+	}
 
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
