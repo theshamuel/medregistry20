@@ -473,11 +473,19 @@ func (s *Server) update() {
 	checkNow := s.checkNow
 	done := s.done
 
+	var doneOnce bool
 	defer func() {
-		_ = recover()
+		if r := recover(); r != nil {
+			if doneOnce {
+				return
+			}
+			// We keep this goroutine alive attempting to read from the done channel.
+			<-done
+		}
 	}()
 
 	closeServer := func() {
+		doneOnce = true
 		s.subLock.Lock()
 		for id, c := range s.subscribers {
 			close(c)
@@ -807,7 +815,7 @@ func (s *Server) check() (description.Server, error) {
 	if descPtr != nil {
 		// The check was successful. Set the average RTT and the 90th percentile RTT and return.
 		desc := *descPtr
-		desc = desc.SetAverageRTT(s.rttMonitor.EWMA())
+		desc = desc.SetAverageRTT(s.rttMonitor.getRTT())
 		desc.HeartbeatInterval = s.cfg.heartbeatInterval
 		return desc, nil
 	}
@@ -842,9 +850,14 @@ func extractTopologyVersion(err error) *description.TopologyVersion {
 	return nil
 }
 
-// RTTMonitor returns this server's round-trip-time monitor.
-func (s *Server) RTTMonitor() driver.RTTMonitor {
-	return s.rttMonitor
+// MinRTT returns the minimum round-trip time to the server observed over the last 5 minutes.
+func (s *Server) MinRTT() time.Duration {
+	return s.rttMonitor.getMinRTT()
+}
+
+// RTT90 returns the 90th percentile round-trip time to the server observed over the last 5 minutes.
+func (s *Server) RTT90() time.Duration {
+	return s.rttMonitor.getRTT90()
 }
 
 // OperationCount returns the current number of in-progress operations for this server.
@@ -862,7 +875,7 @@ func (s *Server) String() string {
 		str += fmt.Sprintf(", Tag sets: %s", desc.Tags)
 	}
 	if state == serverConnected {
-		str += fmt.Sprintf(", Average RTT: %s, Min RTT: %s", desc.AverageRTT, s.RTTMonitor().Min())
+		str += fmt.Sprintf(", Average RTT: %s, Min RTT: %s", desc.AverageRTT, s.MinRTT())
 	}
 	if desc.LastError != nil {
 		str += fmt.Sprintf(", Last error: %s", desc.LastError)

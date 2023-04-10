@@ -6,6 +6,7 @@ import (
 	"github.com/theshamuel/medregistry20/app/rest"
 	"github.com/theshamuel/medregistry20/app/service"
 	"github.com/theshamuel/medregistry20/app/store"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -135,17 +136,30 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 	case "Mongo":
 		return nil, errors.Errorf("not implemented yet")
 	case "Mix":
+		clientOpts := options.Client().ApplyURI(sc.MongoURL)
 		credential := options.Credential{
 			AuthSource: "medregDB",
 			Username:   sc.MongoUsername,
 			Password:   sc.MongoPassword,
 		}
-		clientOpts := options.Client().ApplyURI(sc.MongoURL).
-			SetAuth(credential)
+		
+		//Go with assumption that password cannot be empty
+		if credential.Password != "" && credential.Username != "" {
+			clientOpts = clientOpts.SetAuth(credential)
+		}
+
 		client, err := mongo.Connect(context.Background(), clientOpts)
 		if err != nil {
 			return nil, errors.Errorf("can't initialize data store because failed to establish mongo connection: %s", sc.StoreEngine.Type)
 		}
+
+		var result bson.M
+		if err := client.Database("medregDB").RunCommand(context.Background(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+			log.Printf("[ERROR] cannot ping medregDB: %#v", err)
+			return nil, errors.New("cannot connect to MongoDB")
+		}
+
+		log.Printf("[INFO] ping medregDB successfully")
 		r := &store.Mix{
 			URI:         sc.MedregAPIV1URL,
 			MongoClient: client,

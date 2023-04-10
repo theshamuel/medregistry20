@@ -106,7 +106,7 @@ func (c *Command) Execute(ctx context.Context) error {
 		Crypt:          c.crypt,
 		ServerAPI:      c.serverAPI,
 		Timeout:        c.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 }
 
 // Session sets the session for this operation.

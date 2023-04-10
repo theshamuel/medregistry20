@@ -66,7 +66,6 @@ func NewClientEncryption(keyVaultClient *Client, opts ...*options.ClientEncrypti
 		KeyFn:      kr.cryptKeys,
 		CollInfoFn: cir.cryptCollInfo,
 		TLSConfig:  ceo.TLSConfig,
-		HTTPClient: ceo.HTTPClient,
 	})
 
 	return ce, nil

@@ -240,7 +240,7 @@ func contactResponders(ctx context.Context, cfg config) *ResponseDetails {
 			}
 			request = request.WithContext(ctx)
 
-			httpResponse, err := cfg.httpClient.Do(request)
+			httpResponse, err := http.DefaultClient.Do(request)
 			if err != nil {
 				return nil
 			}

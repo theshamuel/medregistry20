@@ -9,7 +9,6 @@ package operation
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo/description"
@@ -21,7 +20,7 @@ import (
 
 // CommitTransaction attempts to commit a transaction.
 type CommitTransaction struct {
-	maxTime       *time.Duration
+	maxTimeMS     *int64
 	recoveryToken bsoncore.Document
 	session       *session.Client
 	clock         *session.ClusterClock
@@ -62,30 +61,32 @@ func (ct *CommitTransaction) Execute(ctx context.Context) error {
 		Crypt:             ct.crypt,
 		Database:          ct.database,
 		Deployment:        ct.deployment,
-		MaxTime:           ct.maxTime,
 		Selector:          ct.selector,
 		WriteConcern:      ct.writeConcern,
 		ServerAPI:         ct.serverAPI,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
 func (ct *CommitTransaction) command(dst []byte, desc description.SelectedServer) ([]byte, error) {
 
 	dst = bsoncore.AppendInt32Element(dst, "commitTransaction", 1)
+	if ct.maxTimeMS != nil {
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *ct.maxTimeMS)
+	}
 	if ct.recoveryToken != nil {
 		dst = bsoncore.AppendDocumentElement(dst, "recoveryToken", ct.recoveryToken)
 	}
 	return dst, nil
 }
 
-// MaxTime specifies the maximum amount of time to allow the query to run on the server.
-func (ct *CommitTransaction) MaxTime(maxTime *time.Duration) *CommitTransaction {
+// MaxTimeMS specifies the maximum amount of time to allow the query to run.
+func (ct *CommitTransaction) MaxTimeMS(maxTimeMS int64) *CommitTransaction {
 	if ct == nil {
 		ct = new(CommitTransaction)
 	}
 
-	ct.maxTime = maxTime
+	ct.maxTimeMS = &maxTimeMS
 	return ct
 }
 

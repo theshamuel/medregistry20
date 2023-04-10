@@ -162,7 +162,7 @@ func (u *Update) Execute(ctx context.Context) error {
 		Crypt:             u.crypt,
 		ServerAPI:         u.serverAPI,
 		Timeout:           u.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 

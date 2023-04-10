@@ -119,7 +119,10 @@ func newChangeStream(ctx context.Context, config changeStreamConfig, pipeline in
 
 	cs.sess = sessionFromContext(ctx)
 	if cs.sess == nil && cs.client.sessionPool != nil {
-		cs.sess = session.NewImplicitClientSession(cs.client.sessionPool, cs.client.id)
+		cs.sess, cs.err = session.NewClientSession(cs.client.sessionPool, cs.client.id, session.Implicit)
+		if cs.err != nil {
+			return nil, cs.Err()
+		}
 	}
 	if cs.err = cs.client.validSession(cs.sess); cs.err != nil {
 		closeImplicitSession(cs.sess)
@@ -237,6 +240,7 @@ func (cs *ChangeStream) createOperationDeployment(server driver.Server, connecti
 func (cs *ChangeStream) executeOperation(ctx context.Context, resuming bool) error {
 	var server driver.Server
 	var conn driver.Connection
+	var err error
 
 	if server, cs.err = cs.client.deployment.SelectServer(ctx, cs.selector); cs.err != nil {
 		return cs.Err()
@@ -280,62 +284,48 @@ func (cs *ChangeStream) executeOperation(ctx context.Context, resuming bool) err
 		// Cancel the timeout-derived context at the end of executeOperation to avoid a context leak.
 		defer cancelFunc()
 	}
-
-	// Execute the aggregate, retrying on retryable errors once (1) if retryable reads are enabled and
-	// infinitely (-1) if context is a Timeout context.
-	var retries int
-	if cs.client.retryReads {
-		retries = 1
-	}
-	if internal.IsTimeoutContext(ctx) {
-		retries = -1
-	}
-
-	var err error
-AggregateExecuteLoop:
-	for {
-		err = cs.aggregate.Execute(ctx)
-		// If no error or no retries remain, do not retry.
-		if err == nil || retries == 0 {
-			break AggregateExecuteLoop
+	if original := cs.aggregate.Execute(ctx); original != nil {
+		retryableRead := cs.client.retryReads && cs.wireVersion != nil && cs.wireVersion.Max >= 6
+		if !retryableRead {
+			cs.err = replaceErrors(original)
+			return cs.err
 		}
 
-		switch tt := err.(type) {
+		cs.err = original
+		switch tt := original.(type) {
 		case driver.Error:
-			// If error is not retryable, do not retry.
 			if !tt.RetryableRead() {
-				break AggregateExecuteLoop
+				break
 			}
 
-			// If error is retryable: subtract 1 from retries, redo server selection, checkout
-			// a connection, and restart loop.
-			retries--
 			server, err = cs.client.deployment.SelectServer(ctx, cs.selector)
 			if err != nil {
-				break AggregateExecuteLoop
+				break
 			}
 
 			conn.Close()
 			conn, err = server.Connection(ctx)
 			if err != nil {
-				break AggregateExecuteLoop
+				break
 			}
 			defer conn.Close()
-
-			// Update the wire version with data from the new connection.
 			cs.wireVersion = conn.Description().WireVersion
 
-			// Reset deployment.
+			if cs.wireVersion == nil || cs.wireVersion.Max < 6 {
+				break
+			}
+
 			cs.aggregate.Deployment(cs.createOperationDeployment(server, conn))
-		default:
-			// Do not retry if error is not a driver error.
-			break AggregateExecuteLoop
+			cs.err = cs.aggregate.Execute(ctx)
 		}
+
+		if cs.err != nil {
+			cs.err = replaceErrors(cs.err)
+			return cs.Err()
+		}
+
 	}
-	if err != nil {
-		cs.err = replaceErrors(err)
-		return cs.err
-	}
+	cs.err = nil
 
 	cr := cs.aggregate.ResultCursorResponse()
 	cr.Server = server
@@ -429,7 +419,10 @@ func (cs *ChangeStream) createPipelineOptionsDoc() (bsoncore.Document, error) {
 	}
 
 	if cs.options.FullDocument != nil {
-		if *cs.options.FullDocument != options.Default {
+		// Only append a default "fullDocument" field if wire version is less than 6 (3.6). Otherwise,
+		// the server will assume users want the default behavior, and "fullDocument" does not need to be
+		// specified.
+		if *cs.options.FullDocument != options.Default || (cs.wireVersion != nil && cs.wireVersion.Max < 6) {
 			plDoc = bsoncore.AppendStringElement(plDoc, "fullDocument", string(*cs.options.FullDocument))
 		}
 	}

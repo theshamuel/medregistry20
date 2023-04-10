@@ -29,7 +29,7 @@ type FindAndModify struct {
 	collation                bsoncore.Document
 	comment                  bsoncore.Value
 	fields                   bsoncore.Document
-	maxTime                  *time.Duration
+	maxTimeMS                *int64
 	newDocument              *bool
 	query                    bsoncore.Document
 	remove                   *bool
@@ -137,13 +137,12 @@ func (fam *FindAndModify) Execute(ctx context.Context) error {
 		CommandMonitor: fam.monitor,
 		Database:       fam.database,
 		Deployment:     fam.deployment,
-		MaxTime:        fam.maxTime,
 		Selector:       fam.selector,
 		WriteConcern:   fam.writeConcern,
 		Crypt:          fam.crypt,
 		ServerAPI:      fam.serverAPI,
 		Timeout:        fam.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -173,6 +172,12 @@ func (fam *FindAndModify) command(dst []byte, desc description.SelectedServer) (
 	if fam.fields != nil {
 
 		dst = bsoncore.AppendDocumentElement(dst, "fields", fam.fields)
+	}
+
+	// Only append specified maxTimeMS if timeout is not also specified.
+	if fam.maxTimeMS != nil && fam.timeout == nil {
+
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *fam.maxTimeMS)
 	}
 	if fam.newDocument != nil {
 
@@ -264,13 +269,13 @@ func (fam *FindAndModify) Fields(fields bsoncore.Document) *FindAndModify {
 	return fam
 }
 
-// MaxTime specifies the maximum amount of time to allow the operation to run on the server.
-func (fam *FindAndModify) MaxTime(maxTime *time.Duration) *FindAndModify {
+// MaxTimeMS specifies the maximum amount of time to allow the operation to run.
+func (fam *FindAndModify) MaxTimeMS(maxTimeMS int64) *FindAndModify {
 	if fam == nil {
 		fam = new(FindAndModify)
 	}
 
-	fam.maxTime = maxTime
+	fam.maxTimeMS = &maxTimeMS
 	return fam
 }
 

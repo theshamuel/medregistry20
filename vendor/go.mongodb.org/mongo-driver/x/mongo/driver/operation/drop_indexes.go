@@ -23,7 +23,7 @@ import (
 // DropIndexes performs an dropIndexes operation.
 type DropIndexes struct {
 	index        *string
-	maxTime      *time.Duration
+	maxTimeMS    *int64
 	session      *session.Client
 	clock        *session.ClusterClock
 	collection   string
@@ -94,12 +94,11 @@ func (di *DropIndexes) Execute(ctx context.Context) error {
 		Crypt:             di.crypt,
 		Database:          di.database,
 		Deployment:        di.deployment,
-		MaxTime:           di.maxTime,
 		Selector:          di.selector,
 		WriteConcern:      di.writeConcern,
 		ServerAPI:         di.serverAPI,
 		Timeout:           di.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -107,6 +106,10 @@ func (di *DropIndexes) command(dst []byte, desc description.SelectedServer) ([]b
 	dst = bsoncore.AppendStringElement(dst, "dropIndexes", di.collection)
 	if di.index != nil {
 		dst = bsoncore.AppendStringElement(dst, "index", *di.index)
+	}
+	// Only append specified maxTimeMS if timeout is not also specified.
+	if di.maxTimeMS != nil && di.timeout == nil {
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *di.maxTimeMS)
 	}
 	return dst, nil
 }
@@ -121,13 +124,13 @@ func (di *DropIndexes) Index(index string) *DropIndexes {
 	return di
 }
 
-// MaxTime specifies the maximum amount of time to allow the query to run on the server.
-func (di *DropIndexes) MaxTime(maxTime *time.Duration) *DropIndexes {
+// MaxTimeMS specifies the maximum amount of time to allow the query to run.
+func (di *DropIndexes) MaxTimeMS(maxTimeMS int64) *DropIndexes {
 	if di == nil {
 		di = new(DropIndexes)
 	}
 
-	di.maxTime = maxTime
+	di.maxTimeMS = &maxTimeMS
 	return di
 }
 

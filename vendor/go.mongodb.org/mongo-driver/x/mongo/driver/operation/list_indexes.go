@@ -21,7 +21,7 @@ import (
 // ListIndexes performs a listIndexes operation.
 type ListIndexes struct {
 	batchSize  *int32
-	maxTime    *time.Duration
+	maxTimeMS  *int64
 	session    *session.Client
 	clock      *session.ClusterClock
 	collection string
@@ -75,7 +75,6 @@ func (li *ListIndexes) Execute(ctx context.Context) error {
 		CommandMonitor: li.monitor,
 		Database:       li.database,
 		Deployment:     li.deployment,
-		MaxTime:        li.maxTime,
 		Selector:       li.selector,
 		Crypt:          li.crypt,
 		Legacy:         driver.LegacyListIndexes,
@@ -83,7 +82,7 @@ func (li *ListIndexes) Execute(ctx context.Context) error {
 		Type:           driver.Read,
 		ServerAPI:      li.serverAPI,
 		Timeout:        li.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -94,6 +93,12 @@ func (li *ListIndexes) command(dst []byte, desc description.SelectedServer) ([]b
 	if li.batchSize != nil {
 
 		cursorDoc = bsoncore.AppendInt32Element(cursorDoc, "batchSize", *li.batchSize)
+	}
+
+	// Only append specified maxTimeMS if timeout is not also specified.
+	if li.maxTimeMS != nil && li.timeout == nil {
+
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *li.maxTimeMS)
 	}
 	cursorDoc, _ = bsoncore.AppendDocumentEnd(cursorDoc, cursorIdx)
 	dst = bsoncore.AppendDocumentElement(dst, "cursor", cursorDoc)
@@ -111,13 +116,13 @@ func (li *ListIndexes) BatchSize(batchSize int32) *ListIndexes {
 	return li
 }
 
-// MaxTime specifies the maximum amount of time to allow the query to run on the server.
-func (li *ListIndexes) MaxTime(maxTime *time.Duration) *ListIndexes {
+// MaxTimeMS specifies the maximum amount of time to allow the query to run.
+func (li *ListIndexes) MaxTimeMS(maxTimeMS int64) *ListIndexes {
 	if li == nil {
 		li = new(ListIndexes)
 	}
 
-	li.maxTime = maxTime
+	li.maxTimeMS = &maxTimeMS
 	return li
 }
 

@@ -194,12 +194,12 @@ func (h *Hello) Execute(ctx context.Context) error {
 		return errors.New("a Hello must have a Deployment set before Execute can be called")
 	}
 
-	return h.createOperation().Execute(ctx)
+	return h.createOperation().Execute(ctx, nil)
 }
 
 // StreamResponse gets the next streaming Hello response from the server.
 func (h *Hello) StreamResponse(ctx context.Context, conn driver.StreamerConnection) error {
-	return h.createOperation().ExecuteExhaust(ctx, conn)
+	return h.createOperation().ExecuteExhaust(ctx, conn, nil)
 }
 
 func (h *Hello) createOperation() driver.Operation {
@@ -229,7 +229,7 @@ func (h *Hello) GetHandshakeInformation(ctx context.Context, _ address.Address, 
 			return nil
 		},
 		ServerAPI: h.serverAPI,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 	if err != nil {
 		return driver.HandshakeInformation{}, err
 	}

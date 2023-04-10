@@ -26,7 +26,6 @@ import (
 	"go.mongodb.org/mongo-driver/internal/randutil"
 	"go.mongodb.org/mongo-driver/mongo/address"
 	"go.mongodb.org/mongo-driver/mongo/description"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/dns"
 )
@@ -71,7 +70,7 @@ const (
 type Topology struct {
 	state int64
 
-	cfg *Config
+	cfg *config
 
 	desc atomic.Value // holds a description.Topology
 
@@ -122,14 +121,11 @@ func newServerSelectionState(selector description.ServerSelector, timeoutChan <-
 	}
 }
 
-// New creates a new topology. A "nil" config is interpreted as the default configuration.
-func New(cfg *Config) (*Topology, error) {
-	if cfg == nil {
-		var err error
-		cfg, err = NewConfig(options.Client(), nil)
-		if err != nil {
-			return nil, err
-		}
+// New creates a new topology.
+func New(opts ...Option) (*Topology, error) {
+	cfg, err := newConfig(opts...)
+	if err != nil {
+		return nil, err
 	}
 
 	t := &Topology{
@@ -148,8 +144,8 @@ func New(cfg *Config) (*Topology, error) {
 		return t.apply(context.TODO(), desc)
 	}
 
-	if t.cfg.URI != "" {
-		t.pollingRequired = strings.HasPrefix(t.cfg.URI, "mongodb+srv://") && !t.cfg.LoadBalanced
+	if t.cfg.uri != "" {
+		t.pollingRequired = strings.HasPrefix(t.cfg.uri, "mongodb+srv://") && !t.cfg.loadBalanced
 	}
 
 	t.publishTopologyOpeningEvent()
@@ -170,23 +166,23 @@ func (t *Topology) Connect() error {
 
 	// A replica set name sets the initial topology type to ReplicaSetNoPrimary unless a direct connection is also
 	// specified, in which case the initial type is Single.
-	if t.cfg.ReplicaSetName != "" {
-		t.fsm.SetName = t.cfg.ReplicaSetName
+	if t.cfg.replicaSetName != "" {
+		t.fsm.SetName = t.cfg.replicaSetName
 		t.fsm.Kind = description.ReplicaSetNoPrimary
 	}
 
 	// A direct connection unconditionally sets the topology type to Single.
-	if t.cfg.Mode == SingleMode {
+	if t.cfg.mode == SingleMode {
 		t.fsm.Kind = description.Single
 	}
 
-	for _, a := range t.cfg.SeedList {
+	for _, a := range t.cfg.seedList {
 		addr := address.Address(a).Canonicalize()
 		t.fsm.Servers = append(t.fsm.Servers, description.NewDefaultServer(addr))
 	}
 
 	switch {
-	case t.cfg.LoadBalanced:
+	case t.cfg.loadBalanced:
 		// In LoadBalanced mode, we mock a series of events: TopologyDescriptionChanged from Unknown to LoadBalanced,
 		// ServerDescriptionChanged from Unknown to LoadBalancer, and then TopologyDescriptionChanged to reflect the
 		// previous ServerDescriptionChanged event. We publish all of these events here because we don't start server
@@ -196,7 +192,7 @@ func (t *Topology) Connect() error {
 		t.fsm.Kind = description.LoadBalanced
 		t.publishTopologyDescriptionChangedEvent(description.Topology{}, t.fsm.Topology)
 
-		addr := address.Address(t.cfg.SeedList[0]).Canonicalize()
+		addr := address.Address(t.cfg.seedList[0]).Canonicalize()
 		if err := t.addServer(addr); err != nil {
 			t.serversLock.Unlock()
 			return err
@@ -224,7 +220,7 @@ func (t *Topology) Connect() error {
 		}
 		t.desc.Store(newDesc)
 		t.publishTopologyDescriptionChangedEvent(description.Topology{}, t.fsm.Topology)
-		for _, a := range t.cfg.SeedList {
+		for _, a := range t.cfg.seedList {
 			addr := address.Address(a).Canonicalize()
 			err = t.addServer(addr)
 			if err != nil {
@@ -236,7 +232,7 @@ func (t *Topology) Connect() error {
 
 	t.serversLock.Unlock()
 	if t.pollingRequired {
-		uri, err := url.Parse(t.cfg.URI)
+		uri, err := url.Parse(t.cfg.uri)
 		if err != nil {
 			return err
 		}
@@ -384,8 +380,8 @@ func (t *Topology) SelectServer(ctx context.Context, ss description.ServerSelect
 	}
 	var ssTimeoutCh <-chan time.Time
 
-	if t.cfg.ServerSelectionTimeout > 0 {
-		ssTimeout := time.NewTimer(t.cfg.ServerSelectionTimeout)
+	if t.cfg.serverSelectionTimeout > 0 {
+		ssTimeout := time.NewTimer(t.cfg.serverSelectionTimeout)
 		ssTimeoutCh = ssTimeout.C
 		defer ssTimeout.Stop()
 	}
@@ -575,7 +571,7 @@ func (t *Topology) selectServerFromDescription(desc description.Topology,
 func (t *Topology) pollSRVRecords(hosts string) {
 	defer t.pollingwg.Done()
 
-	serverConfig := newServerConfig(t.cfg.ServerOpts...)
+	serverConfig := newServerConfig(t.cfg.serverOpts...)
 	heartbeatInterval := serverConfig.heartbeatInterval
 
 	pollTicker := time.NewTicker(t.rescanSRVInterval)
@@ -601,7 +597,7 @@ func (t *Topology) pollSRVRecords(hosts string) {
 			break
 		}
 
-		parsedHosts, err := t.dnsResolver.ParseHosts(hosts, t.cfg.SRVServiceName, false)
+		parsedHosts, err := t.dnsResolver.ParseHosts(hosts, t.cfg.srvServiceName, false)
 		// DNS problem or no verified hosts returned
 		if err != nil || len(parsedHosts) == 0 {
 			if !t.pollHeartbeatTime.Load().(bool) {
@@ -659,14 +655,14 @@ func (t *Topology) processSRVResults(parsedHosts []string) bool {
 	// Now that we've removed all the hosts that disappeared from the SRV record, we need to add any
 	// new hosts added to the SRV record. If adding all of the new hosts would increase the number
 	// of servers past srvMaxHosts, shuffle the list of added hosts.
-	if t.cfg.SRVMaxHosts > 0 && len(t.servers)+len(diff.Added) > t.cfg.SRVMaxHosts {
+	if t.cfg.srvMaxHosts > 0 && len(t.servers)+len(diff.Added) > t.cfg.srvMaxHosts {
 		random.Shuffle(len(diff.Added), func(i, j int) {
 			diff.Added[i], diff.Added[j] = diff.Added[j], diff.Added[i]
 		})
 	}
 	// Add all added hosts until the number of servers reaches srvMaxHosts.
 	for _, a := range diff.Added {
-		if t.cfg.SRVMaxHosts > 0 && len(t.servers) >= t.cfg.SRVMaxHosts {
+		if t.cfg.srvMaxHosts > 0 && len(t.servers) >= t.cfg.srvMaxHosts {
 			break
 		}
 		addr := address.Address(a).Canonicalize()
@@ -766,7 +762,7 @@ func (t *Topology) addServer(addr address.Address) error {
 		return nil
 	}
 
-	svr, err := ConnectServer(addr, t.updateCallback, t.id, t.cfg.ServerOpts...)
+	svr, err := ConnectServer(addr, t.updateCallback, t.id, t.cfg.serverOpts...)
 	if err != nil {
 		return err
 	}
@@ -798,8 +794,8 @@ func (t *Topology) publishServerDescriptionChangedEvent(prev description.Server,
 		NewDescription:      current,
 	}
 
-	if t.cfg.ServerMonitor != nil && t.cfg.ServerMonitor.ServerDescriptionChanged != nil {
-		t.cfg.ServerMonitor.ServerDescriptionChanged(serverDescriptionChanged)
+	if t.cfg.serverMonitor != nil && t.cfg.serverMonitor.ServerDescriptionChanged != nil {
+		t.cfg.serverMonitor.ServerDescriptionChanged(serverDescriptionChanged)
 	}
 }
 
@@ -810,8 +806,8 @@ func (t *Topology) publishServerClosedEvent(addr address.Address) {
 		TopologyID: t.id,
 	}
 
-	if t.cfg.ServerMonitor != nil && t.cfg.ServerMonitor.ServerClosed != nil {
-		t.cfg.ServerMonitor.ServerClosed(serverClosed)
+	if t.cfg.serverMonitor != nil && t.cfg.serverMonitor.ServerClosed != nil {
+		t.cfg.serverMonitor.ServerClosed(serverClosed)
 	}
 }
 
@@ -823,8 +819,8 @@ func (t *Topology) publishTopologyDescriptionChangedEvent(prev description.Topol
 		NewDescription:      current,
 	}
 
-	if t.cfg.ServerMonitor != nil && t.cfg.ServerMonitor.TopologyDescriptionChanged != nil {
-		t.cfg.ServerMonitor.TopologyDescriptionChanged(topologyDescriptionChanged)
+	if t.cfg.serverMonitor != nil && t.cfg.serverMonitor.TopologyDescriptionChanged != nil {
+		t.cfg.serverMonitor.TopologyDescriptionChanged(topologyDescriptionChanged)
 	}
 }
 
@@ -834,8 +830,8 @@ func (t *Topology) publishTopologyOpeningEvent() {
 		TopologyID: t.id,
 	}
 
-	if t.cfg.ServerMonitor != nil && t.cfg.ServerMonitor.TopologyOpening != nil {
-		t.cfg.ServerMonitor.TopologyOpening(topologyOpening)
+	if t.cfg.serverMonitor != nil && t.cfg.serverMonitor.TopologyOpening != nil {
+		t.cfg.serverMonitor.TopologyOpening(topologyOpening)
 	}
 }
 
@@ -845,7 +841,7 @@ func (t *Topology) publishTopologyClosedEvent() {
 		TopologyID: t.id,
 	}
 
-	if t.cfg.ServerMonitor != nil && t.cfg.ServerMonitor.TopologyClosed != nil {
-		t.cfg.ServerMonitor.TopologyClosed(topologyClosed)
+	if t.cfg.serverMonitor != nil && t.cfg.serverMonitor.TopologyClosed != nil {
+		t.cfg.serverMonitor.TopologyClosed(topologyClosed)
 	}
 }

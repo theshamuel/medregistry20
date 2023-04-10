@@ -494,7 +494,7 @@ func (p *parser) validateAuth() error {
 			return fmt.Errorf("username required for GSSAPI")
 		}
 		for k := range p.AuthMechanismProperties {
-			if k != "SERVICE_NAME" && k != "CANONICALIZE_HOST_NAME" && k != "SERVICE_REALM" && k != "SERVICE_HOST" {
+			if k != "SERVICE_NAME" && k != "CANONICALIZE_HOST_NAME" && k != "SERVICE_REALM" {
 				return fmt.Errorf("invalid auth property for GSSAPI")
 			}
 		}

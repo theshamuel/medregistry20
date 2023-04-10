@@ -43,7 +43,7 @@ type rttMonitor struct {
 	samples       []time.Duration
 	offset        int
 	minRTT        time.Duration
-	rtt90         time.Duration
+	RTT90         time.Duration
 	averageRTT    time.Duration
 	averageRTTSet bool
 
@@ -52,8 +52,6 @@ type rttMonitor struct {
 	ctx      context.Context
 	cancelFn context.CancelFunc
 }
-
-var _ driver.RTTMonitor = &rttMonitor{}
 
 func newRTTMonitor(cfg *rttConfig) *rttMonitor {
 	if cfg.interval <= 0 {
@@ -181,7 +179,7 @@ func (r *rttMonitor) reset() {
 	}
 	r.offset = 0
 	r.minRTT = 0
-	r.rtt90 = 0
+	r.RTT90 = 0
 	r.averageRTT = 0
 	r.averageRTTSet = false
 }
@@ -198,7 +196,7 @@ func (r *rttMonitor) addSample(rtt time.Duration) {
 	// setting these to prevent noisy samples on startup from artificially increasing RTT and to allow the
 	// calculation of a 90th percentile.
 	r.minRTT = min(r.samples, minSamples)
-	r.rtt90 = percentile(90.0, r.samples, minSamples)
+	r.RTT90 = percentile(90.0, r.samples, minSamples)
 
 	if !r.averageRTTSet {
 		r.averageRTT = rtt
@@ -251,57 +249,26 @@ func percentile(perc float64, samples []time.Duration, minSamples int) time.Dura
 	return time.Duration(p)
 }
 
-// EWMA returns the exponentially weighted moving average observed round-trip time.
-func (r *rttMonitor) EWMA() time.Duration {
+// getRTT returns the exponentially weighted moving average observed round-trip time.
+func (r *rttMonitor) getRTT() time.Duration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	return r.averageRTT
 }
 
-// Min returns the minimum observed round-trip time over the window period.
-func (r *rttMonitor) Min() time.Duration {
+// getMinRTT returns the minimum observed round-trip time over the window period.
+func (r *rttMonitor) getMinRTT() time.Duration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	return r.minRTT
 }
 
-// P90 returns the 90th percentile observed round-trip time over the window period.
-func (r *rttMonitor) P90() time.Duration {
+// getRTT90 returns the 90th percentile observed round-trip time over the window period.
+func (r *rttMonitor) getRTT90() time.Duration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	return r.rtt90
-}
-
-// Stats returns stringified stats of the current state of the monitor.
-func (r *rttMonitor) Stats() string {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	// Calculate standard deviation and average (non-EWMA) of samples.
-	var sum float64
-	floatSamples := make([]float64, 0, len(r.samples))
-	for _, sample := range r.samples {
-		if sample > 0 {
-			floatSamples = append(floatSamples, float64(sample))
-			sum += float64(sample)
-		}
-	}
-
-	var avg, stdDev float64
-	if len(floatSamples) > 0 {
-		avg = sum / float64(len(floatSamples))
-
-		var err error
-		stdDev, err = stats.StandardDeviation(floatSamples)
-		if err != nil {
-			panic(fmt.Errorf("x/mongo/driver/topology: error calculating standard deviation RTT: %v for samples:\n%v", err, floatSamples))
-		}
-	}
-
-	return fmt.Sprintf(`Round-trip-time monitor statistics:`+"\n"+
-		`average RTT: %v, minimum RTT: %v, 90th percentile RTT: %v, standard dev: %v`+"\n",
-		time.Duration(avg), r.minRTT, r.rtt90, time.Duration(stdDev))
+	return r.RTT90
 }

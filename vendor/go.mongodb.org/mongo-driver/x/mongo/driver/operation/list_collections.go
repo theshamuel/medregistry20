@@ -88,7 +88,7 @@ func (lc *ListCollections) Execute(ctx context.Context) error {
 		Legacy:            driver.LegacyListCollections,
 		ServerAPI:         lc.serverAPI,
 		Timeout:           lc.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 

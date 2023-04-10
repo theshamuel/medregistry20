@@ -40,7 +40,6 @@ type Server struct {
 	HeartbeatInterval     time.Duration
 	HelloOK               bool
 	Hosts                 []string
-	IsCryptd              bool
 	LastError             error
 	LastUpdateTime        time.Time
 	LastWriteTime         time.Time
@@ -73,7 +72,7 @@ func NewServer(addr address.Address, response bson.Raw) Server {
 	var ok bool
 	var isReplicaSet, isWritablePrimary, hidden, secondary, arbiterOnly bool
 	var msg string
-	var versionRange VersionRange
+	var version VersionRange
 	for _, element := range elements {
 		switch element.Key() {
 		case "arbiters":
@@ -100,12 +99,6 @@ func NewServer(addr address.Address, response bson.Raw) Server {
 			desc.ElectionID, ok = element.Value().ObjectIDOK()
 			if !ok {
 				desc.LastError = fmt.Errorf("expected 'electionId' to be a objectID but it's a BSON %s", element.Value().Type)
-				return desc
-			}
-		case "iscryptd":
-			desc.IsCryptd, ok = element.Value().BooleanOK()
-			if !ok {
-				desc.LastError = fmt.Errorf("expected 'iscryptd' to be a boolean but it's a BSON %s", element.Value().Type)
 				return desc
 			}
 		case "helloOk":
@@ -196,13 +189,13 @@ func NewServer(addr address.Address, response bson.Raw) Server {
 			}
 			desc.CanonicalAddr = address.Address(me).Canonicalize()
 		case "maxWireVersion":
-			versionRange.Max, ok = element.Value().AsInt32OK()
+			version.Max, ok = element.Value().AsInt32OK()
 			if !ok {
 				desc.LastError = fmt.Errorf("expected 'maxWireVersion' to be an integer but it's a BSON %s", element.Value().Type)
 				return desc
 			}
 		case "minWireVersion":
-			versionRange.Min, ok = element.Value().AsInt32OK()
+			version.Min, ok = element.Value().AsInt32OK()
 			if !ok {
 				desc.LastError = fmt.Errorf("expected 'minWireVersion' to be an integer but it's a BSON %s", element.Value().Type)
 				return desc
@@ -328,7 +321,7 @@ func NewServer(addr address.Address, response bson.Raw) Server {
 		desc.Kind = Mongos
 	}
 
-	desc.WireVersion = &versionRange
+	desc.WireVersion = &version
 
 	return desc
 }

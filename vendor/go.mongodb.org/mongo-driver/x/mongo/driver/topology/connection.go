@@ -200,7 +200,6 @@ func (c *connection) connect(ctx context.Context) (err error) {
 		ocspOpts := &ocsp.VerifyOptions{
 			Cache:                   c.config.ocspCache,
 			DisableEndpointChecking: c.config.disableOCSPEndpointCheck,
-			HTTPClient:              c.config.httpClient,
 		}
 		tlsNc, err := configureTLS(dialCtx, c.config.tlsConnectionSource, c.nc, c.addr, tlsConfig, ocspOpts)
 		if err != nil {
@@ -379,9 +378,9 @@ func (c *connection) write(ctx context.Context, wm []byte) (err error) {
 }
 
 // readWireMessage reads a wiremessage from the connection. The dst parameter will be overwritten.
-func (c *connection) readWireMessage(ctx context.Context) ([]byte, error) {
+func (c *connection) readWireMessage(ctx context.Context, dst []byte) ([]byte, error) {
 	if atomic.LoadInt64(&c.state) != connConnected {
-		return nil, ConnectionError{ConnectionID: c.id, message: "connection is closed"}
+		return dst, ConnectionError{ConnectionID: c.id, message: "connection is closed"}
 	}
 
 	var deadline time.Time
@@ -399,7 +398,7 @@ func (c *connection) readWireMessage(ctx context.Context) ([]byte, error) {
 		return nil, ConnectionError{ConnectionID: c.id, Wrapped: err, message: "failed to set read deadline"}
 	}
 
-	dst, errMsg, err := c.read(ctx)
+	dst, errMsg, err := c.read(ctx, dst)
 	if err != nil {
 		// We closeConnection the connection because we don't know if there are other bytes left to read.
 		c.close()
@@ -417,7 +416,7 @@ func (c *connection) readWireMessage(ctx context.Context) ([]byte, error) {
 	return dst, nil
 }
 
-func (c *connection) read(ctx context.Context) (bytesRead []byte, errMsg string, err error) {
+func (c *connection) read(ctx context.Context, dst []byte) (bytesRead []byte, errMsg string, err error) {
 	go c.cancellationListener.Listen(ctx, c.cancellationListenerCallback)
 	defer func() {
 		// If the context is cancelled after we finish reading the server response, the cancellation listener could fire
@@ -455,12 +454,18 @@ func (c *connection) read(ctx context.Context) (bytesRead []byte, errMsg string,
 		return nil, errResponseTooLarge.Error(), errResponseTooLarge
 	}
 
-	dst := make([]byte, size)
+	if int(size) > cap(dst) {
+		// Since we can't grow this slice without allocating, just allocate an entirely new slice.
+		dst = make([]byte, 0, size)
+	}
+	// We need to ensure we don't accidentally read into a subsequent wire message, so we set the
+	// size to read exactly this wire message.
+	dst = dst[:size]
 	copy(dst, sizeBuf[:])
 
 	_, err = io.ReadFull(c.nc, dst[4:])
 	if err != nil {
-		return dst, "incomplete read of full message", err
+		return nil, "incomplete read of full message", err
 	}
 
 	return dst, "", nil
@@ -558,8 +563,8 @@ func (c initConnection) LocalAddress() address.Address {
 func (c initConnection) WriteWireMessage(ctx context.Context, wm []byte) error {
 	return c.writeWireMessage(ctx, wm)
 }
-func (c initConnection) ReadWireMessage(ctx context.Context) ([]byte, error) {
-	return c.readWireMessage(ctx)
+func (c initConnection) ReadWireMessage(ctx context.Context, dst []byte) ([]byte, error) {
+	return c.readWireMessage(ctx, dst)
 }
 func (c initConnection) SetStreaming(streaming bool) {
 	c.setStreaming(streaming)
@@ -602,13 +607,13 @@ func (c *Connection) WriteWireMessage(ctx context.Context, wm []byte) error {
 
 // ReadWireMessage handles reading a wire message from the underlying connection. The dst parameter
 // will be overwritten with the new wire message.
-func (c *Connection) ReadWireMessage(ctx context.Context) ([]byte, error) {
+func (c *Connection) ReadWireMessage(ctx context.Context, dst []byte) ([]byte, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	if c.connection == nil {
-		return nil, ErrConnectionClosed
+		return dst, ErrConnectionClosed
 	}
-	return c.connection.readWireMessage(ctx)
+	return c.connection.readWireMessage(ctx, dst)
 }
 
 // CompressWireMessage handles compressing the provided wire message using the underlying
@@ -621,6 +626,9 @@ func (c *Connection) CompressWireMessage(src, dst []byte) ([]byte, error) {
 		return dst, ErrConnectionClosed
 	}
 	if c.connection.compressor == wiremessage.CompressorNoOp {
+		if len(dst) == 0 {
+			return src, nil
+		}
 		return append(dst, src...), nil
 	}
 	_, reqid, respto, origcode, rem, ok := wiremessage.ReadHeader(src)

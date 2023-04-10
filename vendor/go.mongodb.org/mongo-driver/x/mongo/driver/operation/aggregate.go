@@ -30,7 +30,7 @@ type Aggregate struct {
 	collation                bsoncore.Document
 	comment                  *string
 	hint                     bsoncore.Value
-	maxTime                  *time.Duration
+	maxTimeMS                *int64
 	pipeline                 bsoncore.Document
 	session                  *session.Client
 	clock                    *session.ClusterClock
@@ -109,9 +109,8 @@ func (a *Aggregate) Execute(ctx context.Context) error {
 		MinimumWriteConcernWireVersion: 5,
 		ServerAPI:                      a.serverAPI,
 		IsOutputAggregate:              a.hasOutputStage,
-		MaxTime:                        a.maxTime,
 		Timeout:                        a.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -148,6 +147,12 @@ func (a *Aggregate) command(dst []byte, desc description.SelectedServer) ([]byte
 	if a.hint.Type != bsontype.Type(0) {
 
 		dst = bsoncore.AppendValueElement(dst, "hint", a.hint)
+	}
+
+	// Only append specified maxTimeMS if timeout is not also specified.
+	if a.maxTimeMS != nil && a.timeout == nil {
+
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *a.maxTimeMS)
 	}
 	if a.pipeline != nil {
 
@@ -225,13 +230,13 @@ func (a *Aggregate) Hint(hint bsoncore.Value) *Aggregate {
 	return a
 }
 
-// MaxTime specifies the maximum amount of time to allow the query to run on the server.
-func (a *Aggregate) MaxTime(maxTime *time.Duration) *Aggregate {
+// MaxTimeMS specifies the maximum amount of time to allow the query to run.
+func (a *Aggregate) MaxTimeMS(maxTimeMS int64) *Aggregate {
 	if a == nil {
 		a = new(Aggregate)
 	}
 
-	a.maxTime = maxTime
+	a.maxTimeMS = &maxTimeMS
 	return a
 }
 

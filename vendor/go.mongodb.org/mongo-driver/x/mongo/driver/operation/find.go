@@ -34,7 +34,7 @@ type Find struct {
 	let                 bsoncore.Document
 	limit               *int64
 	max                 bsoncore.Document
-	maxTime             *time.Duration
+	maxTimeMS           *int64
 	min                 bsoncore.Document
 	noCursorTimeout     *bool
 	oplogReplay         *bool
@@ -98,14 +98,13 @@ func (f *Find) Execute(ctx context.Context) error {
 		Crypt:             f.crypt,
 		Database:          f.database,
 		Deployment:        f.deployment,
-		MaxTime:           f.maxTime,
 		ReadConcern:       f.readConcern,
 		ReadPreference:    f.readPreference,
 		Selector:          f.selector,
 		Legacy:            driver.LegacyFind,
 		ServerAPI:         f.serverAPI,
 		Timeout:           f.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -149,6 +148,10 @@ func (f *Find) command(dst []byte, desc description.SelectedServer) ([]byte, err
 	}
 	if f.max != nil {
 		dst = bsoncore.AppendDocumentElement(dst, "max", f.max)
+	}
+	// Only append specified maxTimeMS if timeout is not also specified.
+	if f.maxTimeMS != nil && f.timeout == nil {
+		dst = bsoncore.AppendInt64Element(dst, "maxTimeMS", *f.maxTimeMS)
 	}
 	if f.min != nil {
 		dst = bsoncore.AppendDocumentElement(dst, "min", f.min)
@@ -296,13 +299,13 @@ func (f *Find) Max(max bsoncore.Document) *Find {
 	return f
 }
 
-// MaxTime specifies the maximum amount of time to allow the query to run on the server.
-func (f *Find) MaxTime(maxTime *time.Duration) *Find {
+// MaxTimeMS specifies the maximum amount of time to allow the query to run.
+func (f *Find) MaxTimeMS(maxTimeMS int64) *Find {
 	if f == nil {
 		f = new(Find)
 	}
 
-	f.maxTime = maxTime
+	f.maxTimeMS = &maxTimeMS
 	return f
 }
 

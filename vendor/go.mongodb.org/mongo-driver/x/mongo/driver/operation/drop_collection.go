@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo/description"
@@ -33,7 +32,6 @@ type DropCollection struct {
 	writeConcern *writeconcern.WriteConcern
 	result       DropCollectionResult
 	serverAPI    *driver.ServerAPIOptions
-	timeout      *time.Duration
 }
 
 // DropCollectionResult represents a dropCollection result returned by the server.
@@ -101,8 +99,7 @@ func (dc *DropCollection) Execute(ctx context.Context) error {
 		Selector:          dc.selector,
 		WriteConcern:      dc.writeConcern,
 		ServerAPI:         dc.serverAPI,
-		Timeout:           dc.timeout,
-	}.Execute(ctx)
+	}.Execute(ctx, nil)
 
 }
 
@@ -208,15 +205,5 @@ func (dc *DropCollection) ServerAPI(serverAPI *driver.ServerAPIOptions) *DropCol
 	}
 
 	dc.serverAPI = serverAPI
-	return dc
-}
-
-// Timeout sets the timeout for this operation.
-func (dc *DropCollection) Timeout(timeout *time.Duration) *DropCollection {
-	if dc == nil {
-		dc = new(DropCollection)
-	}
-
-	dc.timeout = timeout
 	return dc
 }

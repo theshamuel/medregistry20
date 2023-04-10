@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
@@ -72,7 +73,11 @@ func (iv IndexView) List(ctx context.Context, opts ...*options.ListIndexesOption
 
 	sess := sessionFromContext(ctx)
 	if sess == nil && iv.coll.client.sessionPool != nil {
-		sess = session.NewImplicitClientSession(iv.coll.client.sessionPool, iv.coll.client.id)
+		var err error
+		sess, err = session.NewClientSession(iv.coll.client.sessionPool, iv.coll.client.id, session.Implicit)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err := iv.coll.client.validSession(sess)
@@ -99,7 +104,9 @@ func (iv IndexView) List(ctx context.Context, opts ...*options.ListIndexesOption
 		op = op.BatchSize(*lio.BatchSize)
 		cursorOpts.BatchSize = *lio.BatchSize
 	}
-	op = op.MaxTime(lio.MaxTime)
+	if lio.MaxTime != nil {
+		op = op.MaxTimeMS(int64(*lio.MaxTime / time.Millisecond))
+	}
 	retry := driver.RetryNone
 	if iv.coll.client.retryReads {
 		retry = driver.RetryOncePerCommand
@@ -223,7 +230,10 @@ func (iv IndexView) CreateMany(ctx context.Context, models []IndexModel, opts ..
 	sess := sessionFromContext(ctx)
 
 	if sess == nil && iv.coll.client.sessionPool != nil {
-		sess = session.NewImplicitClientSession(iv.coll.client.sessionPool, iv.coll.client.id)
+		sess, err = session.NewClientSession(iv.coll.client.sessionPool, iv.coll.client.id, session.Implicit)
+		if err != nil {
+			return nil, err
+		}
 		defer sess.EndSession()
 	}
 
@@ -248,7 +258,11 @@ func (iv IndexView) CreateMany(ctx context.Context, models []IndexModel, opts ..
 		Session(sess).WriteConcern(wc).ClusterClock(iv.coll.client.clock).
 		Database(iv.coll.db.name).Collection(iv.coll.name).CommandMonitor(iv.coll.client.monitor).
 		Deployment(iv.coll.client.deployment).ServerSelector(selector).ServerAPI(iv.coll.client.serverAPI).
-		Timeout(iv.coll.client.timeout).MaxTime(option.MaxTime)
+		Timeout(iv.coll.client.timeout)
+
+	if option.MaxTime != nil {
+		op.MaxTimeMS(int64(*option.MaxTime / time.Millisecond))
+	}
 	if option.CommitQuorum != nil {
 		commitQuorum, err := transformValue(iv.coll.registry, option.CommitQuorum, true, "commitQuorum")
 		if err != nil {
@@ -360,7 +374,11 @@ func (iv IndexView) drop(ctx context.Context, name string, opts ...*options.Drop
 
 	sess := sessionFromContext(ctx)
 	if sess == nil && iv.coll.client.sessionPool != nil {
-		sess = session.NewImplicitClientSession(iv.coll.client.sessionPool, iv.coll.client.id)
+		var err error
+		sess, err = session.NewClientSession(iv.coll.client.sessionPool, iv.coll.client.id, session.Implicit)
+		if err != nil {
+			return nil, err
+		}
 		defer sess.EndSession()
 	}
 
@@ -385,7 +403,10 @@ func (iv IndexView) drop(ctx context.Context, name string, opts ...*options.Drop
 		ServerSelector(selector).ClusterClock(iv.coll.client.clock).
 		Database(iv.coll.db.name).Collection(iv.coll.name).
 		Deployment(iv.coll.client.deployment).ServerAPI(iv.coll.client.serverAPI).
-		Timeout(iv.coll.client.timeout).MaxTime(dio.MaxTime)
+		Timeout(iv.coll.client.timeout)
+	if dio.MaxTime != nil {
+		op.MaxTimeMS(int64(*dio.MaxTime / time.Millisecond))
+	}
 
 	err = op.Execute(ctx)
 	if err != nil {
