@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -206,7 +205,11 @@ func (s *Mix) GetNalogSpravkaSeq() (int, error) {
 }
 
 func (s *Mix) IncrementNalogSpravkaSeq(idx int) error {
-	return errors.New("not implemented yet")
+	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
+	filter := bson.M{"code": "nalogSpravkaNum"}
+	update := bson.D{{"$set", bson.D{{"seq", idx}}}}
+	_, err := sequenceCollection.UpdateOne(context.TODO(), filter, update)
+	return err
 }
 
 func (s *Mix) Close() error {
