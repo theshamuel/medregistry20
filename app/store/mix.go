@@ -1,9 +1,12 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"time"
@@ -15,8 +18,8 @@ type Mix struct {
 	MongoClient *mongo.Client
 }
 
-func (s *Mix) FindVisitByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
-	log.Printf("[INFO] FindVisitByDoctorSinceTill param doctorID=%s;startDateEvent=%s;endDateEvent=%s;",
+func (s *Mix) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
+	log.Printf("[INFO] FindVisitsByDoctorSinceTill param doctorID=%s;startDateEvent=%s;endDateEvent=%s;",
 		doctorID, startDateEvent, endDateEvent)
 	s.HttpClient = &utils.Repeater{
 		ClientTimeout: 10,
@@ -89,6 +92,7 @@ func (s *Mix) FindClientByID(clientID string) (client model.Client, err error) {
 	}
 	return client, nil
 }
+
 func (s *Mix) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 	log.Printf("[INFO] FindDoctorByID params doctorID=%s;", doctorID)
 	s.HttpClient = &utils.Repeater{
@@ -109,6 +113,7 @@ func (s *Mix) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 	}
 	return doctor, nil
 }
+
 func (s *Mix) CompanyDetail() (company model.Company, err error) {
 	log.Printf("[INFO] get company detail")
 	s.HttpClient = &utils.Repeater{
@@ -130,7 +135,59 @@ func (s *Mix) CompanyDetail() (company model.Company, err error) {
 	return company, nil
 }
 
+func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, endDateEventStr string) ([]model.Visit, error) {
+
+	res := make([]model.Visit, 0)
+
+	clientIDObj, _ := primitive.ObjectIDFromHex(clientID)
+	startDateEvent, err := time.Parse("2006-01-02", startDateEventStr)
+	if err != nil {
+		return nil, err
+	}
+
+	endDateEvent, err := time.Parse("2006-01-02", endDateEventStr)
+	if err != nil {
+		return nil, err
+	}
+
+	startDateEventB := primitive.NewDateTimeFromTime(time.Date(startDateEvent.Year(), startDateEvent.Month(),
+		startDateEvent.Day(), 0, 0, 0, 0, time.UTC))
+	endDateEventB := primitive.NewDateTimeFromTime(time.Date(endDateEvent.Year(), endDateEvent.Month(),
+		endDateEvent.Day(), 23, 59, 59, 0, time.UTC))
+
+	var filter = bson.D{
+		{"$and", []bson.D{
+			{{"client._id", clientIDObj}},
+			{{"dateEvent", bson.D{{"$gte", startDateEventB}}}},
+			{{"dateEvent", bson.D{{"$lte", endDateEventB}}}},
+		}}}
+
+	visitsCollection := s.MongoClient.Database("medregDB").Collection("visits")
+	cursor, err := visitsCollection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var visitsBson []VisitModel
+	if err = cursor.All(context.Background(), &visitsBson); err != nil {
+		return nil, err
+	}
+
+	for _, vb := range visitsBson {
+		res = append(res, model.Visit{
+			ID:        vb.ID.Hex(),
+			ClientID:  vb.Client.ID.Hex(),
+			TotalSum:  vb.CalculateTotalSum(),
+			DateEvent: vb.DateEvent.Time(),
+		})
+
+	}
+
+	return res, nil
+}
+
 func (s *Mix) Close() error {
-	log.Printf("[INFO] Close Mix")
+	s.MongoClient.Disconnect(context.Background())
 	return nil
 }

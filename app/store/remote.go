@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
 	"log"
@@ -9,13 +10,13 @@ import (
 )
 
 type Remote struct {
-	URI string
+	URI    string
 	Client *utils.Repeater
 }
 
-func (s *Remote) FindVisitByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error){
-	log.Printf("[INFO] FindVisitByDoctorSinceTill param doctorID=%s;startDateEvent=%s;endDateEvent=%s;",
-	doctorID, startDateEvent, endDateEvent)
+func (s *Remote) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
+	log.Printf("[INFO] FindVisitsByDoctorSinceTill param doctorID=%s;startDateEvent=%s;endDateEvent=%s;",
+		doctorID, startDateEvent, endDateEvent)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
@@ -35,7 +36,7 @@ func (s *Remote) FindVisitByDoctorSinceTill(doctorID string, startDateEvent, end
 	return visits, nil
 }
 
-func (s *Remote) FindVisitByID(visitID string)(visit model.Visit, err error) {
+func (s *Remote) FindVisitByID(visitID string) (visit model.Visit, err error) {
 	log.Printf("[INFO] FindVisitByID params visitID=%s;", visitID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
@@ -60,7 +61,7 @@ func (s *Remote) FindVisitByID(visitID string)(visit model.Visit, err error) {
 	}
 	return visit, nil
 }
-func (s *Remote) FindClientByID(clientID string)(client model.Client, err error) {
+func (s *Remote) FindClientByID(clientID string) (client model.Client, err error) {
 	log.Printf("[INFO] FindClientByID params clientID=%s;", clientID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
@@ -87,7 +88,8 @@ func (s *Remote) FindClientByID(clientID string)(client model.Client, err error)
 	}
 	return client, nil
 }
-func (s *Remote) FindDoctorByID(doctorID string)(doctor model.Doctor, err error) {
+
+func (s *Remote) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 	log.Printf("[INFO] FindDoctorByID params doctorID=%s;", doctorID)
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
@@ -107,7 +109,8 @@ func (s *Remote) FindDoctorByID(doctorID string)(doctor model.Doctor, err error)
 	}
 	return doctor, nil
 }
-func (s *Remote) CompanyDetail()(company model.Company, err error) {
+
+func (s *Remote) CompanyDetail() (company model.Company, err error) {
 	log.Printf("[INFO] get company detail")
 	s.Client = &utils.Repeater{
 		ClientTimeout: 10,
@@ -126,6 +129,10 @@ func (s *Remote) CompanyDetail()(company model.Company, err error) {
 		return company, err
 	}
 	return company, nil
+}
+
+func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
+	return nil, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine yet")
 }
 
 func (s *Remote) Close() error {

@@ -14,34 +14,37 @@ var _ EngineInterface = &EngineInterfaceMock{}
 
 // EngineInterfaceMock is a mock implementation of EngineInterface.
 //
-// 	func TestSomethingThatUsesEngineInterface(t *testing.T) {
+//	func TestSomethingThatUsesEngineInterface(t *testing.T) {
 //
-// 		// make and configure a mocked EngineInterface
-// 		mockedEngineInterface := &EngineInterfaceMock{
-// 			CloseFunc: func() error {
-// 				panic("mock out the Close method")
-// 			},
-// 			CompanyDetailFunc: func() (model.Company, error) {
-// 				panic("mock out the CompanyDetail method")
-// 			},
-// 			FindClientByIDFunc: func(id string) (model.Client, error) {
-// 				panic("mock out the FindClientByID method")
-// 			},
-// 			FindDoctorByIDFunc: func(id string) (model.Doctor, error) {
-// 				panic("mock out the FindDoctorByID method")
-// 			},
-// 			FindVisitByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
-// 				panic("mock out the FindVisitByDoctorSinceTill method")
-// 			},
-// 			FindVisitByIDFunc: func(id string) (model.Visit, error) {
-// 				panic("mock out the FindVisitByID method")
-// 			},
-// 		}
+//		// make and configure a mocked EngineInterface
+//		mockedEngineInterface := &EngineInterfaceMock{
+//			CloseFunc: func() error {
+//				panic("mock out the Close method")
+//			},
+//			CompanyDetailFunc: func() (model.Company, error) {
+//				panic("mock out the CompanyDetail method")
+//			},
+//			FindClientByIDFunc: func(id string) (model.Client, error) {
+//				panic("mock out the FindClientByID method")
+//			},
+//			FindDoctorByIDFunc: func(id string) (model.Doctor, error) {
+//				panic("mock out the FindDoctorByID method")
+//			},
+//			FindVisitByIDFunc: func(id string) (model.Visit, error) {
+//				panic("mock out the FindVisitByID method")
+//			},
+//			FindVisitsByClientIDSinceTillFunc: func(clientID string, startDateEventStr string, endDateEventStr string) ([]model.Visit, error) {
+//				panic("mock out the FindVisitsByClientIDSinceTill method")
+//			},
+//			FindVisitsByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
+//				panic("mock out the FindVisitsByDoctorSinceTill method")
+//			},
+//		}
 //
-// 		// use mockedEngineInterface in code that requires EngineInterface
-// 		// and then make assertions.
+//		// use mockedEngineInterface in code that requires EngineInterface
+//		// and then make assertions.
 //
-// 	}
+//	}
 type EngineInterfaceMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func() error
@@ -55,11 +58,14 @@ type EngineInterfaceMock struct {
 	// FindDoctorByIDFunc mocks the FindDoctorByID method.
 	FindDoctorByIDFunc func(id string) (model.Doctor, error)
 
-	// FindVisitByDoctorSinceTillFunc mocks the FindVisitByDoctorSinceTill method.
-	FindVisitByDoctorSinceTillFunc func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error)
-
 	// FindVisitByIDFunc mocks the FindVisitByID method.
 	FindVisitByIDFunc func(id string) (model.Visit, error)
+
+	// FindVisitsByClientIDSinceTillFunc mocks the FindVisitsByClientIDSinceTill method.
+	FindVisitsByClientIDSinceTillFunc func(clientID string, startDateEventStr string, endDateEventStr string) ([]model.Visit, error)
+
+	// FindVisitsByDoctorSinceTillFunc mocks the FindVisitsByDoctorSinceTill method.
+	FindVisitsByDoctorSinceTillFunc func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -79,8 +85,22 @@ type EngineInterfaceMock struct {
 			// ID is the id argument value.
 			ID string
 		}
-		// FindVisitByDoctorSinceTill holds details about calls to the FindVisitByDoctorSinceTill method.
-		FindVisitByDoctorSinceTill []struct {
+		// FindVisitByID holds details about calls to the FindVisitByID method.
+		FindVisitByID []struct {
+			// ID is the id argument value.
+			ID string
+		}
+		// FindVisitsByClientIDSinceTill holds details about calls to the FindVisitsByClientIDSinceTill method.
+		FindVisitsByClientIDSinceTill []struct {
+			// ClientID is the clientID argument value.
+			ClientID string
+			// StartDateEventStr is the startDateEventStr argument value.
+			StartDateEventStr string
+			// EndDateEventStr is the endDateEventStr argument value.
+			EndDateEventStr string
+		}
+		// FindVisitsByDoctorSinceTill holds details about calls to the FindVisitsByDoctorSinceTill method.
+		FindVisitsByDoctorSinceTill []struct {
 			// DoctorID is the doctorID argument value.
 			DoctorID string
 			// StartDateEvent is the startDateEvent argument value.
@@ -88,18 +108,14 @@ type EngineInterfaceMock struct {
 			// EndDateEvent is the endDateEvent argument value.
 			EndDateEvent string
 		}
-		// FindVisitByID holds details about calls to the FindVisitByID method.
-		FindVisitByID []struct {
-			// ID is the id argument value.
-			ID string
-		}
 	}
-	lockClose                      sync.RWMutex
-	lockCompanyDetail              sync.RWMutex
-	lockFindClientByID             sync.RWMutex
-	lockFindDoctorByID             sync.RWMutex
-	lockFindVisitByDoctorSinceTill sync.RWMutex
-	lockFindVisitByID              sync.RWMutex
+	lockClose                         sync.RWMutex
+	lockCompanyDetail                 sync.RWMutex
+	lockFindClientByID                sync.RWMutex
+	lockFindDoctorByID                sync.RWMutex
+	lockFindVisitByID                 sync.RWMutex
+	lockFindVisitsByClientIDSinceTill sync.RWMutex
+	lockFindVisitsByDoctorSinceTill   sync.RWMutex
 }
 
 // Close calls CloseFunc.
@@ -117,7 +133,8 @@ func (mock *EngineInterfaceMock) Close() error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedEngineInterface.CloseCalls())
+//
+//	len(mockedEngineInterface.CloseCalls())
 func (mock *EngineInterfaceMock) CloseCalls() []struct {
 } {
 	var calls []struct {
@@ -143,7 +160,8 @@ func (mock *EngineInterfaceMock) CompanyDetail() (model.Company, error) {
 
 // CompanyDetailCalls gets all the calls that were made to CompanyDetail.
 // Check the length with:
-//     len(mockedEngineInterface.CompanyDetailCalls())
+//
+//	len(mockedEngineInterface.CompanyDetailCalls())
 func (mock *EngineInterfaceMock) CompanyDetailCalls() []struct {
 } {
 	var calls []struct {
@@ -172,7 +190,8 @@ func (mock *EngineInterfaceMock) FindClientByID(id string) (model.Client, error)
 
 // FindClientByIDCalls gets all the calls that were made to FindClientByID.
 // Check the length with:
-//     len(mockedEngineInterface.FindClientByIDCalls())
+//
+//	len(mockedEngineInterface.FindClientByIDCalls())
 func (mock *EngineInterfaceMock) FindClientByIDCalls() []struct {
 	ID string
 } {
@@ -203,7 +222,8 @@ func (mock *EngineInterfaceMock) FindDoctorByID(id string) (model.Doctor, error)
 
 // FindDoctorByIDCalls gets all the calls that were made to FindDoctorByID.
 // Check the length with:
-//     len(mockedEngineInterface.FindDoctorByIDCalls())
+//
+//	len(mockedEngineInterface.FindDoctorByIDCalls())
 func (mock *EngineInterfaceMock) FindDoctorByIDCalls() []struct {
 	ID string
 } {
@@ -213,45 +233,6 @@ func (mock *EngineInterfaceMock) FindDoctorByIDCalls() []struct {
 	mock.lockFindDoctorByID.RLock()
 	calls = mock.calls.FindDoctorByID
 	mock.lockFindDoctorByID.RUnlock()
-	return calls
-}
-
-// FindVisitByDoctorSinceTill calls FindVisitByDoctorSinceTillFunc.
-func (mock *EngineInterfaceMock) FindVisitByDoctorSinceTill(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
-	if mock.FindVisitByDoctorSinceTillFunc == nil {
-		panic("EngineInterfaceMock.FindVisitByDoctorSinceTillFunc: method is nil but EngineInterface.FindVisitByDoctorSinceTill was just called")
-	}
-	callInfo := struct {
-		DoctorID       string
-		StartDateEvent string
-		EndDateEvent   string
-	}{
-		DoctorID:       doctorID,
-		StartDateEvent: startDateEvent,
-		EndDateEvent:   endDateEvent,
-	}
-	mock.lockFindVisitByDoctorSinceTill.Lock()
-	mock.calls.FindVisitByDoctorSinceTill = append(mock.calls.FindVisitByDoctorSinceTill, callInfo)
-	mock.lockFindVisitByDoctorSinceTill.Unlock()
-	return mock.FindVisitByDoctorSinceTillFunc(doctorID, startDateEvent, endDateEvent)
-}
-
-// FindVisitByDoctorSinceTillCalls gets all the calls that were made to FindVisitByDoctorSinceTill.
-// Check the length with:
-//     len(mockedEngineInterface.FindVisitByDoctorSinceTillCalls())
-func (mock *EngineInterfaceMock) FindVisitByDoctorSinceTillCalls() []struct {
-	DoctorID       string
-	StartDateEvent string
-	EndDateEvent   string
-} {
-	var calls []struct {
-		DoctorID       string
-		StartDateEvent string
-		EndDateEvent   string
-	}
-	mock.lockFindVisitByDoctorSinceTill.RLock()
-	calls = mock.calls.FindVisitByDoctorSinceTill
-	mock.lockFindVisitByDoctorSinceTill.RUnlock()
 	return calls
 }
 
@@ -273,7 +254,8 @@ func (mock *EngineInterfaceMock) FindVisitByID(id string) (model.Visit, error) {
 
 // FindVisitByIDCalls gets all the calls that were made to FindVisitByID.
 // Check the length with:
-//     len(mockedEngineInterface.FindVisitByIDCalls())
+//
+//	len(mockedEngineInterface.FindVisitByIDCalls())
 func (mock *EngineInterfaceMock) FindVisitByIDCalls() []struct {
 	ID string
 } {
@@ -283,5 +265,85 @@ func (mock *EngineInterfaceMock) FindVisitByIDCalls() []struct {
 	mock.lockFindVisitByID.RLock()
 	calls = mock.calls.FindVisitByID
 	mock.lockFindVisitByID.RUnlock()
+	return calls
+}
+
+// FindVisitsByClientIDSinceTill calls FindVisitsByClientIDSinceTillFunc.
+func (mock *EngineInterfaceMock) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr string, endDateEventStr string) ([]model.Visit, error) {
+	if mock.FindVisitsByClientIDSinceTillFunc == nil {
+		panic("EngineInterfaceMock.FindVisitsByClientIDSinceTillFunc: method is nil but EngineInterface.FindVisitsByClientIDSinceTill was just called")
+	}
+	callInfo := struct {
+		ClientID          string
+		StartDateEventStr string
+		EndDateEventStr   string
+	}{
+		ClientID:          clientID,
+		StartDateEventStr: startDateEventStr,
+		EndDateEventStr:   endDateEventStr,
+	}
+	mock.lockFindVisitsByClientIDSinceTill.Lock()
+	mock.calls.FindVisitsByClientIDSinceTill = append(mock.calls.FindVisitsByClientIDSinceTill, callInfo)
+	mock.lockFindVisitsByClientIDSinceTill.Unlock()
+	return mock.FindVisitsByClientIDSinceTillFunc(clientID, startDateEventStr, endDateEventStr)
+}
+
+// FindVisitsByClientIDSinceTillCalls gets all the calls that were made to FindVisitsByClientIDSinceTill.
+// Check the length with:
+//
+//	len(mockedEngineInterface.FindVisitsByClientIDSinceTillCalls())
+func (mock *EngineInterfaceMock) FindVisitsByClientIDSinceTillCalls() []struct {
+	ClientID          string
+	StartDateEventStr string
+	EndDateEventStr   string
+} {
+	var calls []struct {
+		ClientID          string
+		StartDateEventStr string
+		EndDateEventStr   string
+	}
+	mock.lockFindVisitsByClientIDSinceTill.RLock()
+	calls = mock.calls.FindVisitsByClientIDSinceTill
+	mock.lockFindVisitsByClientIDSinceTill.RUnlock()
+	return calls
+}
+
+// FindVisitsByDoctorSinceTill calls FindVisitsByDoctorSinceTillFunc.
+func (mock *EngineInterfaceMock) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
+	if mock.FindVisitsByDoctorSinceTillFunc == nil {
+		panic("EngineInterfaceMock.FindVisitsByDoctorSinceTillFunc: method is nil but EngineInterface.FindVisitsByDoctorSinceTill was just called")
+	}
+	callInfo := struct {
+		DoctorID       string
+		StartDateEvent string
+		EndDateEvent   string
+	}{
+		DoctorID:       doctorID,
+		StartDateEvent: startDateEvent,
+		EndDateEvent:   endDateEvent,
+	}
+	mock.lockFindVisitsByDoctorSinceTill.Lock()
+	mock.calls.FindVisitsByDoctorSinceTill = append(mock.calls.FindVisitsByDoctorSinceTill, callInfo)
+	mock.lockFindVisitsByDoctorSinceTill.Unlock()
+	return mock.FindVisitsByDoctorSinceTillFunc(doctorID, startDateEvent, endDateEvent)
+}
+
+// FindVisitsByDoctorSinceTillCalls gets all the calls that were made to FindVisitsByDoctorSinceTill.
+// Check the length with:
+//
+//	len(mockedEngineInterface.FindVisitsByDoctorSinceTillCalls())
+func (mock *EngineInterfaceMock) FindVisitsByDoctorSinceTillCalls() []struct {
+	DoctorID       string
+	StartDateEvent string
+	EndDateEvent   string
+} {
+	var calls []struct {
+		DoctorID       string
+		StartDateEvent string
+		EndDateEvent   string
+	}
+	mock.lockFindVisitsByDoctorSinceTill.RLock()
+	calls = mock.calls.FindVisitsByDoctorSinceTill
+	mock.lockFindVisitsByDoctorSinceTill.RUnlock()
 	return calls
 }

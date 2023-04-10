@@ -4,7 +4,6 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/theshamuel/medregistry20/app/store"
 	"github.com/theshamuel/medregistry20/app/store/model"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -13,12 +12,21 @@ import (
 )
 
 type DataStore struct {
-	Engine store.EngineInterface
+	Engine     store.EngineInterface
 	ReportPath string
 }
 
+type ReportNalogSpravkaReq struct {
+	ClientID              string
+	DateFrom              string
+	DateTo                string
+	FIOPayer              string
+	RelationPayerToClient string
+	isClientSelfPayer     bool
+}
+
 func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, startDateEvent, endDateEvent string) ([]byte, error) {
-	visits, _ := s.Engine.FindVisitByDoctorSinceTill(doctorID, startDateEvent, endDateEvent)
+	visits, _ := s.Engine.FindVisitsByDoctorSinceTill(doctorID, startDateEvent, endDateEvent)
 	f, err := excelize.OpenFile(s.ReportPath + "/templateReportOfWorkPeriodByDoctor.xlsx")
 	if err != nil {
 		log.Printf("[ERROR] Cannot read template templateReportOfWorkPeriodByDoctor.xlsx #%v", err)
@@ -120,7 +128,6 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 	doctorTypeCell = strings.ReplaceAll(doctorTypeCell, "[doctorType]", strings.ToUpper(doctor.PositionGenitive))
 	f.SetCellStr(sheetName, "J6", doctorTypeCell)
 
-
 	//Fill up client full name cell [Left side]
 	fioClientCell := f.GetCellValue(sheetName, "A8")
 	fioClientCell = strings.ReplaceAll(fioClientCell, "[fioClient]",
@@ -221,6 +228,58 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 
 	res, err := ConvertExcelFileToBytes(f)
 	if err != nil {
+		log.Printf("[ERROR] cannot convert file to bytes")
+	}
+	return res, nil
+}
+
+func (s *DataStore) BuildReportNalogSpravka() ([]byte, error) {
+	f, err := excelize.OpenFile(s.ReportPath + "/templateNalogSpravka.xlsx")
+	if err != nil {
+		log.Printf("[ERROR] cannot read template templateNalogSpravka.xlsx #%v", err)
+		return nil, err
+	}
+
+	visits, err := s.Engine.FindVisitsByClientIDSinceTill("5bee6e2c24aa9a0007bec7b6", "2022-01-01", "2022-12-31")
+	if err != nil {
+		log.Printf("[ERROR] cannot get client visits #%v", err)
+		return nil, err
+	}
+
+	superTotalSum := 0
+	var visitDatesStr strings.Builder
+	for i, v := range visits {
+		superTotalSum = superTotalSum + v.TotalSum
+		if i < len(visits)-1 {
+			visitDatesStr.WriteString(v.DateEvent.Format("01.02.2006"))
+			visitDatesStr.WriteString(",")
+		} else {
+			visitDatesStr.WriteString(v.DateEvent.Format("01.02.2006"))
+		}
+	}
+
+	sheetName := f.GetSheetName(1)
+
+	//Fill up number
+	numberCell := f.GetCellValue(sheetName, "B9")
+	numberCell = strings.ReplaceAll(numberCell, "[number]", "123")
+	f.SetCellStr(sheetName, "B9", numberCell)
+
+	numberCell = f.GetCellValue(sheetName, "B37")
+	numberCell = strings.ReplaceAll(numberCell, "[number]", "123")
+	f.SetCellStr(sheetName, "B37", numberCell)
+
+	//Fill up total sum
+	totalSumCell := f.GetCellValue(sheetName, "H17")
+	totalSumCell = strings.ReplaceAll(totalSumCell, "[totalSum]", strconv.Itoa(superTotalSum))
+	f.SetCellStr(sheetName, "H17", totalSumCell)
+
+	totalSumAndCurrencyCell := f.GetCellValue(sheetName, "J42")
+	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", strconv.Itoa(superTotalSum))
+	f.SetCellStr(sheetName, "J42", totalSumAndCurrencyCell)
+
+	res, err := ConvertExcelFileToBytes(f)
+	if err != nil {
 		log.Printf("[ERROR] Cannot convert file to bytes")
 	}
 	return res, nil
@@ -240,10 +299,9 @@ func ConvertExcelFileToBytes(f *excelize.File) ([]byte, error) {
 		}
 	}()
 
-	res, _ := ioutil.ReadFile(fileName)
+	res, _ := os.ReadFile(fileName)
 	return res, nil
 }
-
 
 func (s *DataStore) Close() error {
 	return s.Engine.Close()

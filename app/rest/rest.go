@@ -26,9 +26,10 @@ type Rest struct {
 type restInterface interface {
 	BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, startDateEvent, endDateEvent string) ([]byte, error)
 	BuildReportVisitResult(visitID string) ([]byte, error)
+	BuildReportNalogSpravka() ([]byte, error)
 }
 
-//Run http server
+// Run http server
 func (r *Rest) Run(port int) {
 	log.Printf("[INFO] Run http server on port %d", port)
 	r.lock.Lock()
@@ -97,6 +98,7 @@ func (r *Rest) routes() chi.Router {
 			api.Use(middleware.NoCache)
 			api.Get("/reports/file/reportPeriodByDoctor/{doctorId}/{startDateEvent}/{endDateEvent}/{fileReportName}", r.reportPeriodByDoctorBetweenDateEvent)
 			api.Get("/reports/file/reportVisitResult/{visitId}/{fileReportName}", r.reportVisitResult)
+			api.Get("/reports/file/reportNalogSpravka/{fileReportName}", r.reportNalogSpravka)
 		})
 	})
 
@@ -125,6 +127,23 @@ func (r *Rest) reportVisitResult(w http.ResponseWriter, req *http.Request) {
 	log.Printf("[INFO] reportPeriodByDoctorBetweenDateEvent params visitId=%s", visitID)
 
 	file, err := r.DataService.BuildReportVisitResult(visitID)
+	if err != nil {
+		log.Printf("[ERROR] cannot build report by visit %#v", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, err = w.Write(file)
+	if err != nil {
+		log.Printf("[ERROR] cannot write visit result response %#v", err)
+		return
+	}
+}
+
+func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
+	//visitID := chi.URLParam(req, "visitId")
+	log.Printf("[INFO] reportNalogSpravka")
+
+	file, err := r.DataService.BuildReportNalogSpravka()
 	if err != nil {
 		log.Printf("[ERROR] cannot build report by visit %#v", err)
 		return

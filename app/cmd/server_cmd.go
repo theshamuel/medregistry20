@@ -142,7 +142,7 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 			Username:   sc.MongoUsername,
 			Password:   sc.MongoPassword,
 		}
-		
+
 		//Go with assumption that password cannot be empty
 		if credential.Password != "" && credential.Username != "" {
 			clientOpts = clientOpts.SetAuth(credential)
