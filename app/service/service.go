@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/theshamuel/medregistry20/app/store"
 	"github.com/theshamuel/medregistry20/app/store/model"
@@ -267,16 +268,22 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		return res, nil
 	}
 
-	superTotalSum := 0
+	superTotalSum := 0.0
+	superTotalSumStr := ""
 	var visitDatesStr strings.Builder
 	for i, v := range visits {
-		superTotalSum = superTotalSum + v.TotalSum
+		superTotalSum = superTotalSum + v.TotalSumWithPenny
 		if i < len(visits)-1 {
 			visitDatesStr.WriteString(v.DateEvent.Format("02.01.2006"))
 			visitDatesStr.WriteString(", ")
 		} else {
 			visitDatesStr.WriteString(v.DateEvent.Format("02.01.2006"))
 		}
+	}
+	if (int(superTotalSum*100) % 100) == 0 {
+		superTotalSumStr = fmt.Sprintf("%d", int(superTotalSum))
+	} else {
+		superTotalSumStr = fmt.Sprintf("%.2f", superTotalSum)
 	}
 
 	numberOfNalogSpravka, err := s.Engine.GetNalogSpravkaSeq()
@@ -317,11 +324,11 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 
 	//Fill up total sum
 	totalSumCell := f.GetCellValue(sheetName, "H17")
-	totalSumCell = strings.ReplaceAll(totalSumCell, "[totalSum]", strconv.Itoa(superTotalSum))
+	totalSumCell = strings.ReplaceAll(totalSumCell, "[totalSum]", superTotalSumStr)
 	f.SetCellStr(sheetName, "H17", totalSumCell)
 
 	totalSumAndCurrencyCell := f.GetCellValue(sheetName, "J42")
-	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", strconv.Itoa(superTotalSum)+" "+utils.GetCurrencySuffix(superTotalSum%10))
+	totalSumAndCurrencyCell = strings.ReplaceAll(totalSumAndCurrencyCell, "[totalSumAndCurrency]", superTotalSumStr+" "+utils.GetCurrencySuffix(int(superTotalSum)%10))
 	f.SetCellStr(sheetName, "J42", totalSumAndCurrencyCell)
 
 	//Fill up visit dates

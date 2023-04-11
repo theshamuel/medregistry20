@@ -34,8 +34,8 @@ type SequenceModel struct {
 	Seq  int                `bson:"seq,omitempty"`
 }
 
-func (v *VisitModel) CalculateTotalSum() int {
-	res := 0
+func (v *VisitModel) CalculateTotalSum() float64 {
+	res := 0.0
 	for _, s := range v.Services {
 		p, err := strconv.Atoi(s.Price)
 		if err != nil {
@@ -52,7 +52,7 @@ func (v *VisitModel) CalculateTotalSum() int {
 		}
 
 		//Truncate penny in case there is discount * price not equal int number
-		res = res + int(float64(p)*x)
+		res = res + float64(p)*x
 	}
 
 	return res

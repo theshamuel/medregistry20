@@ -16,6 +16,7 @@ type Visit struct {
 	Diagnosis                 string    `json:"diagnosis"`
 	AdditionalExamination     string    `json:"additionalExamination"`
 	Therapy                   string    `json:"therapy"`
+	TotalSumWithPenny         float64
 	ClientName                string
 	ClientSurname             string
 	ClientMiddlename          string
