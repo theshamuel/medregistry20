@@ -148,7 +148,7 @@ func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
 	dateEventTo := chi.URLParam(req, "dateEventTo")
 	payerFIO := chi.URLParam(req, "payerFio")
 	relationPayerToClient := chi.URLParam(req, "relationPayerToClient")
-
+	genderOfPayer := chi.URLParam(req, "genderOfPayer")
 	//TODO: add error checker
 	isClientSelfPayer, _ := strconv.ParseBool(chi.URLParam(req, "isClientSelfPayer"))
 
@@ -157,7 +157,8 @@ func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
 		DateFrom:              dateEventFrom,
 		DateTo:                dateEventTo,
 		PayerFIO:              payerFIO,
-		RelationPayerToClient: relationPayerToClient,
+		RelationClientToPayer: relationPayerToClient,
+		GenderOfPayer:         genderOfPayer,
 		IsClientSelfPayer:     isClientSelfPayer,
 	}
 
