@@ -90,15 +90,15 @@ func TestRest_ReportPeriodByDoctorBetweenDateEvent(t *testing.T) {
 	defer teardown()
 	_, code := getRequest(t, ts.URL+"/api/v2/reports/file/reportPeriodByDoctor/1/2021-01-01/2021-01-02/test.xlsx")
 	assert.Equal(t, http.StatusOK, code)
-	if len(engineMock.FindVisitByDoctorSinceTillCalls()) != 1 {
-		t.Errorf("[ERROR] ReportPeriodByDoctorBetweenDateEvent was called %d times, FindVisitsByDoctorSinceTill was called %d times", len(engineMock.FindVisitByDoctorSinceTillCalls()),
-			len(engineMock.FindVisitByDoctorSinceTillCalls()))
+	if len(engineMock.FindVisitsByDoctorSinceTillCalls()) != 1 {
+		t.Errorf("[ERROR] ReportPeriodByDoctorBetweenDateEvent was called %d times, FindVisitsByDoctorSinceTill was called %d times", len(engineMock.FindVisitsByDoctorSinceTillCalls()),
+			len(engineMock.FindVisitsByDoctorSinceTillCalls()))
 	}
 }
 
 func startHTTPServer() (ts *httptest.Server, rest *Rest, engineMock *store.EngineInterfaceMock, gracefulTeardown func()) {
 	engineMock = &store.EngineInterfaceMock{
-		FindVisitByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
+		FindVisitsByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
 			visits := []model.Visit{
 				{
 					ID:                        "1",
