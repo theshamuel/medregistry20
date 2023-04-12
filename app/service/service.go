@@ -297,7 +297,7 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 
 	payerName := visits[0].ClientSurname + " " + visits[0].ClientName + " " + visits[0].ClientMiddlename
 	if !req.IsClientSelfPayer {
-		payerName = req.PayerFIO
+		payerName = strings.Title(strings.ToLower(req.PayerFIO))
 	}
 
 	//Fill up payer FIO
@@ -373,12 +373,10 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 			f.SetCellStyle(sheetName, "C47", "C47", familyRelationCellNormalStyle)
 		}
 	} else {
-		if visits[0].ClientGender == "woman" {
+		if req.GenderOfPayer == "female" {
 			f.SetCellStyle(sheetName, "D42", "D42", genderCellNormalStyle)
-			f.SetCellStyle(sheetName, "D47", "D47", familyRelationCellNormalStyle)
 		} else {
 			f.SetCellStyle(sheetName, "C42", "C42", genderCellNormalStyle)
-			f.SetCellStyle(sheetName, "C47", "C47", familyRelationCellNormalStyle)
 		}
 
 		switch req.RelationClientToPayer {
