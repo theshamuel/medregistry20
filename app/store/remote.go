@@ -131,14 +131,17 @@ func (s *Remote) CompanyDetail() (company model.Company, err error) {
 	return company, nil
 }
 
+// nolint: revive
 func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
-	return nil, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine yet")
+	return nil, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine")
 }
 
+// nolint: revive
 func (s *Remote) GetNalogSpravkaSeq() (int, error) {
 	return 0, errors.New("not implemented")
 }
 
+// nolint: revive
 func (s *Remote) IncrementNalogSpravkaSeq(idx int) error {
 	return errors.New("not implemented")
 }

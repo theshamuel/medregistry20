@@ -6,6 +6,8 @@ import (
 	"github.com/theshamuel/medregistry20/app/store"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"log"
 	"os"
 	"strconv"
@@ -27,6 +29,8 @@ type ReportNalogSpravkaReq struct {
 	GenderOfPayer         string
 	IsClientSelfPayer     bool
 }
+
+var caser = cases.Title(language.Russian)
 
 func (s *DataStore) BuildReportPeriodByDoctorBetweenDateEvent(doctorID string, startDateEvent, endDateEvent string) ([]byte, error) {
 	visits, _ := s.Engine.FindVisitsByDoctorSinceTill(doctorID, startDateEvent, endDateEvent)
@@ -134,17 +138,17 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 	//Fill up client full name cell [Left side]
 	fioClientCell := f.GetCellValue(sheetName, "A8")
 	fioClientCell = strings.ReplaceAll(fioClientCell, "[fioClient]",
-		strings.Title(strings.ToLower(client.Surname))+" "+
-			strings.Title(strings.ToLower(client.Firstname))+" "+
-			strings.Title(strings.ToLower(client.Middlename)))
+		caser.String((strings.ToLower(client.Surname))+" "+
+			caser.String(strings.ToLower(client.Firstname))+" "+
+			caser.String(strings.ToLower(client.Middlename))))
 	f.SetCellStr(sheetName, "A8", fioClientCell)
 
 	//Fill up client full name cell [Right side]
 	fioClientCell = f.GetCellValue(sheetName, "J8")
 	fioClientCell = strings.ReplaceAll(fioClientCell, "[fioClient]",
-		strings.Title(strings.ToLower(client.Surname))+" "+
-			strings.Title(strings.ToLower(client.Firstname))+" "+
-			strings.Title(strings.ToLower(client.Middlename)))
+		caser.String((strings.ToLower(client.Surname))+" "+
+			caser.String(strings.ToLower(client.Firstname))+" "+
+			caser.String(strings.ToLower(client.Middlename))))
 	f.SetCellStr(sheetName, "J8", fioClientCell)
 
 	//Fill up client birth date cell [Left side]
@@ -216,17 +220,17 @@ func (s *DataStore) BuildReportVisitResult(visitID string) ([]byte, error) {
 	//Fill up client therapy cell [Left side]
 	fioDoctorCell := f.GetCellValue(sheetName, "A40")
 	fioDoctorCell = strings.ReplaceAll(fioDoctorCell, "[fioDoctor]",
-		strings.Title(strings.ToLower(doctor.Surname))+" "+
-			strings.Title(strings.ToLower(doctor.FirstName))+" "+
-			strings.Title(strings.ToLower(doctor.Middlename)))
+		caser.String(strings.ToLower(doctor.Surname))+" "+
+			caser.String(strings.ToLower(doctor.FirstName))+" "+
+			caser.String(strings.ToLower(doctor.Middlename)))
 	f.SetCellStr(sheetName, "A40", fioDoctorCell)
 
 	//Fill up client therapy cell [Right side]
 	fioDoctorCell = f.GetCellValue(sheetName, "J40")
 	fioDoctorCell = strings.ReplaceAll(fioDoctorCell, "[fioDoctor]",
-		strings.Title(strings.ToLower(doctor.Surname))+" "+
-			strings.Title(strings.ToLower(doctor.FirstName))+" "+
-			strings.Title(strings.ToLower(doctor.Middlename)))
+		caser.String(strings.ToLower(doctor.Surname))+" "+
+			caser.String(strings.ToLower(doctor.FirstName))+" "+
+			caser.String(strings.ToLower(doctor.Middlename)))
 	f.SetCellStr(sheetName, "J40", fioDoctorCell)
 
 	res, err := ConvertExcelFileToBytes(f)
@@ -297,7 +301,7 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 
 	payerName := visits[0].ClientSurname + " " + visits[0].ClientName + " " + visits[0].ClientMiddlename
 	if !req.IsClientSelfPayer {
-		payerName = strings.Title(strings.ToLower(req.PayerFIO))
+		payerName = caser.String(strings.ToLower(req.PayerFIO))
 	}
 
 	//Fill up payer FIO
@@ -382,22 +386,16 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		switch req.RelationClientToPayer {
 		case "spouse":
 			f.SetCellStyle(sheetName, "E47", "E47", familyRelationCellNormalStyle)
-			break
 		case "son":
 			f.SetCellStyle(sheetName, "F47", "F47", familyRelationCellNormalStyle)
-			break
 		case "daughter":
 			f.SetCellStyle(sheetName, "G47", "G47", familyRelationCellNormalStyle)
-			break
 		case "mother":
 			f.SetCellStyle(sheetName, "H47", "H47", familyRelationCellNormalStyle)
-			break
 		case "father":
 			f.SetCellStyle(sheetName, "I47", "I47", familyRelationCellNormalStyle)
-			break
 		default:
 			f.SetCellStyle(sheetName, "C47", "I47", familyRelationCellRedlStyle)
-			break
 		}
 	}
 

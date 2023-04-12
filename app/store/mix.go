@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"log"
 	"strings"
 	"time"
@@ -15,20 +17,20 @@ import (
 
 type Mix struct {
 	URI         string
-	HttpClient  *utils.Repeater
+	HTTPClient  *utils.Repeater
 	MongoClient *mongo.Client
 }
 
 func (s *Mix) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
 	log.Printf("[INFO] FindVisitsByDoctorSinceTill param doctorID=%s;startDateEvent=%s;endDateEvent=%s;",
 		doctorID, startDateEvent, endDateEvent)
-	s.HttpClient = &utils.Repeater{
+	s.HTTPClient = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
 		URI:           s.URI + "/visits/" + doctorID + "/" + startDateEvent + "/" + endDateEvent + "/",
 		Count:         3,
 	}
-	data, err := s.HttpClient.Get()
+	data, err := s.HTTPClient.Get()
 	if err != nil {
 		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
 	}
@@ -43,13 +45,13 @@ func (s *Mix) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDa
 
 func (s *Mix) FindVisitByID(visitID string) (visit model.Visit, err error) {
 	log.Printf("[INFO] FindVisitByID params visitID=%s;", visitID)
-	s.HttpClient = &utils.Repeater{
+	s.HTTPClient = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
 		URI:           s.URI + "/visits/" + visitID,
 		Count:         3,
 	}
-	data, err := s.HttpClient.Get()
+	data, err := s.HTTPClient.Get()
 	if err != nil {
 		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
 	}
@@ -68,13 +70,13 @@ func (s *Mix) FindVisitByID(visitID string) (visit model.Visit, err error) {
 }
 func (s *Mix) FindClientByID(clientID string) (client model.Client, err error) {
 	log.Printf("[INFO] FindClientByID params clientID=%s;", clientID)
-	s.HttpClient = &utils.Repeater{
+	s.HTTPClient = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
 		URI:           s.URI + "/clients/" + clientID,
 		Count:         3,
 	}
-	data, err := s.HttpClient.Get()
+	data, err := s.HTTPClient.Get()
 	if err != nil {
 		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
 	}
@@ -96,13 +98,13 @@ func (s *Mix) FindClientByID(clientID string) (client model.Client, err error) {
 
 func (s *Mix) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 	log.Printf("[INFO] FindDoctorByID params doctorID=%s;", doctorID)
-	s.HttpClient = &utils.Repeater{
+	s.HTTPClient = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
 		URI:           s.URI + "/doctors/" + doctorID,
 		Count:         3,
 	}
-	data, err := s.HttpClient.Get()
+	data, err := s.HTTPClient.Get()
 	if err != nil {
 		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
 	}
@@ -117,13 +119,13 @@ func (s *Mix) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 
 func (s *Mix) CompanyDetail() (company model.Company, err error) {
 	log.Printf("[INFO] get company detail")
-	s.HttpClient = &utils.Repeater{
+	s.HTTPClient = &utils.Repeater{
 		ClientTimeout: 10,
 		Attempts:      10,
 		URI:           s.URI + "/company",
 		Count:         3,
 	}
-	data, err := s.HttpClient.Get()
+	data, err := s.HTTPClient.Get()
 	if err != nil {
 		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
 	}
@@ -175,14 +177,16 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 		return nil, err
 	}
 
+	caser := cases.Title(language.Russian)
+
 	for _, vb := range visitsBson {
 		res = append(res, model.Visit{
 			ID:                vb.ID.Hex(),
 			ClientID:          vb.Client.ID.Hex(),
 			DateEvent:         vb.DateEvent.Time(),
-			ClientName:        strings.Title(strings.ToLower(vb.Client.Name)),
-			ClientSurname:     strings.Title(strings.ToLower(vb.Client.Surname)),
-			ClientMiddlename:  strings.Title(strings.ToLower(vb.Client.Middlename)),
+			ClientName:        caser.String(strings.ToLower(vb.Client.Name)),
+			ClientSurname:     caser.String(strings.ToLower(vb.Client.Surname)),
+			ClientMiddlename:  caser.String(strings.ToLower(vb.Client.Middlename)),
 			ClientGender:      vb.Client.Gender,
 			TotalSumWithPenny: vb.CalculateTotalSum(),
 		})
@@ -213,6 +217,5 @@ func (s *Mix) IncrementNalogSpravkaSeq(idx int) error {
 }
 
 func (s *Mix) Close() error {
-	s.MongoClient.Disconnect(context.Background())
-	return nil
+	return s.MongoClient.Disconnect(context.Background())
 }

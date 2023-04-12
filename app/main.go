@@ -26,10 +26,9 @@ func main() {
 	if _, err := p.Parse(); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
-		} else {
-			log.Printf("[ERROR] during parsing flags: %+v", err)
-			os.Exit(3)
 		}
+		log.Printf("[ERROR] during parsing flags: %+v", err)
+		os.Exit(3)
 	}
 }
 

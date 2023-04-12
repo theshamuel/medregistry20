@@ -100,7 +100,7 @@ func (r *Rest) routes() chi.Router {
 			api.Use(middleware.NoCache)
 			api.Get("/reports/file/reportPeriodByDoctor/{doctorId}/{startDateEvent}/{endDateEvent}/{fileReportName}", r.reportPeriodByDoctorBetweenDateEvent)
 			api.Get("/reports/file/reportVisitResult/{visitId}/{fileReportName}", r.reportVisitResult)
-			api.Get("/reports/file/reportNalogSpravka/{clientId}/{dateEventFrom}/{dateEventTo}/{payerFio}/{genderOfPayer}/{relationPayerToClient}/{isClientSelfPayer}/{fileReportName}", r.reportNalogSpravka)
+			api.Get("/reports/file/reportNalogSpravka/{clientID}/{dateEventFrom}/{dateEventTo}/{payerFio}/{genderOfPayer}/{relationPayerToClient}/{isClientSelfPayer}/{fileReportName}", r.reportNalogSpravka)
 		})
 	})
 
@@ -143,7 +143,7 @@ func (r *Rest) reportVisitResult(w http.ResponseWriter, req *http.Request) {
 
 func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
 	log.Printf("[INFO] reportNalogSpravka")
-	clientId := chi.URLParam(req, "clientId")
+	clientID := chi.URLParam(req, "clientID")
 	dateEventFrom := chi.URLParam(req, "dateEventFrom")
 	dateEventTo := chi.URLParam(req, "dateEventTo")
 	payerFIO := chi.URLParam(req, "payerFio")
@@ -153,7 +153,7 @@ func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
 	isClientSelfPayer, _ := strconv.ParseBool(chi.URLParam(req, "isClientSelfPayer"))
 
 	reportReq := service.ReportNalogSpravkaReq{
-		ClientID:              clientId,
+		ClientID:              clientID,
 		DateFrom:              dateEventFrom,
 		DateTo:                dateEventTo,
 		PayerFIO:              payerFIO,
