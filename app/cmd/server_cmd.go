@@ -29,7 +29,7 @@ type ServerCommand struct {
 
 type StoreGroup struct {
 	//nolint: staticcheck
-	Type   string      `long:"type" env:"STORE_TYPE" description:"type of storage" choice:"Remote" choice:"Mongo" choice:"Mix" default:"Mix"`
+	Type   string      `long:"type" env:"STORE_TYPE" description:"type of storage" choice:"Remote" choice:"Mongo" choice:"Mix" default:"Remote"`
 	Remote RemoteGroup `group:"Remote" namespace:"Remote" env-namespace:"Remote"`
 	Mongo  MongoGroup  `group:"Mongo" namespace:"Mongo" env-namespace:"Mongo"`
 	Mix    MixGroup    `group:"Mix" namespace:"Mix" env-namespace:"Mix"`
