@@ -136,11 +136,11 @@ func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, 
 }
 
 func (s *Remote) GetNalogSpravkaSeq() (int, error) {
-	return 0, errors.New("not implemented yet")
+	return 0, errors.New("not implemented")
 }
 
 func (s *Remote) IncrementNalogSpravkaSeq(idx int) error {
-	return errors.New("not implemented yet")
+	return errors.New("not implemented")
 }
 
 func (s *Remote) Close() error {

@@ -23,7 +23,8 @@ type ReportNalogSpravkaReq struct {
 	DateFrom              string
 	DateTo                string
 	PayerFIO              string
-	RelationPayerToClient string
+	RelationClientToPayer string
+	GenderOfPayer         string
 	IsClientSelfPayer     bool
 }
 
@@ -363,10 +364,6 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
 										}`)
 
-	genderCellRedStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
-										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
-										}`)
-
 	if req.IsClientSelfPayer {
 		if visits[0].ClientGender == "woman" {
 			f.SetCellStyle(sheetName, "D42", "D42", genderCellNormalStyle)
@@ -376,8 +373,15 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 			f.SetCellStyle(sheetName, "C47", "C47", familyRelationCellNormalStyle)
 		}
 	} else {
-		f.SetCellStyle(sheetName, "C42", "D42", genderCellRedStyle)
-		switch req.RelationPayerToClient {
+		if visits[0].ClientGender == "woman" {
+			f.SetCellStyle(sheetName, "D42", "D42", genderCellNormalStyle)
+			f.SetCellStyle(sheetName, "D47", "D47", familyRelationCellNormalStyle)
+		} else {
+			f.SetCellStyle(sheetName, "C42", "C42", genderCellNormalStyle)
+			f.SetCellStyle(sheetName, "C47", "C47", familyRelationCellNormalStyle)
+		}
+
+		switch req.RelationClientToPayer {
 		case "spouse":
 			f.SetCellStyle(sheetName, "E47", "E47", familyRelationCellNormalStyle)
 			break
