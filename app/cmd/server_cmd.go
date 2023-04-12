@@ -43,6 +43,7 @@ type RemoteGroup struct {
 }
 
 type MongoGroup struct {
+	URL string `long:"mongo-url" env:"MONGO_URL" description:"MongoDB URL"`
 }
 
 type MixGroup struct {
