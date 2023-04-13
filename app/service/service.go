@@ -358,13 +358,13 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 	f.SetCellStr(sheetName, "C38", releaseDateWithMonthWordCell)
 
 	//Fill up gender
-	genderCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+	genderCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"center"},
 										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#000000" }
 										}`)
-	familyRelationCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+	familyRelationCellNormalStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"center"},
 										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#000000" }
 										}`)
-	familyRelationCellRedlStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"left"},
+	familyRelationCellRedlStyle, _ := f.NewStyle(`{"alignment":{"horizontal":"left", "vertical":"center"},
 										 "font":{"bold":true, "underline": "single", "family":"Times New Roman", "size":10, "color":"#FF0000" }
 										}`)
 
