@@ -25,9 +25,10 @@ RUN \
     else echo "[WARN] Skip GolangCI linter" ; fi
 
 RUN \
-    version="test"; \
+    ref=$(git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q --short HEAD); \
+    version=${ref}_$(git log -1 --format=%h)_$(date +%Y%m%dT%H:%M:%S); \
     if [ -n "$VER" ] ; then \
-    version=${VER}_$(date +%Y%m%d-%H:%M:%S); fi; \
+    version=${VER}_${version}; fi; \
     echo "version=$version"; \
     go build -o medregestry20 -ldflags "-X main.version=${version} -s -w" ./app
 
