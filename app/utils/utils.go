@@ -1,6 +1,10 @@
 package utils
 
 import (
+	"github.com/360EntSecGroup-Skylar/excelize"
+	"log"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -38,4 +42,22 @@ func GetMonthWordByOrderNumber(month time.Month) string {
 
 func GetCurrencySuffix(units int) string {
 	return currencySuffix[units]
+}
+
+func ConvertExcelFileToBytes(f *excelize.File) ([]byte, error) {
+	fileName := os.TempDir() + "/" + strconv.FormatInt(time.Now().Unix(), 10) + ".xlsx"
+	err := f.SaveAs(fileName)
+	if err != nil {
+		log.Printf("[ERROR] Cannot create temporary file #%v", err)
+		return nil, err
+	}
+	defer func() {
+		err := os.Remove(fileName)
+		if err != nil {
+			log.Printf("[WARN] failed to remove %s from FS: %s", fileName, err)
+		}
+	}()
+
+	res, _ := os.ReadFile(fileName)
+	return res, nil
 }
