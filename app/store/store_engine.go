@@ -11,7 +11,7 @@ type EngineInterface interface {
 	CompanyDetail() (model.Company, error)
 	FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error)
 	FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, endDateEventStr string) ([]model.Visit, error)
-	GetNalogSpravkaSeq() (int, error)
-	IncrementNalogSpravkaSeq(idx int) error
+	IncrementSeq(idx int, code string) error
+	GetSeq(code string) (int, error)
 	Close() error
 }

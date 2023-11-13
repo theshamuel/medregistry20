@@ -102,7 +102,7 @@ func (r *Rest) routes() chi.Router {
 			api.Get("/reports/file/reportPeriodByDoctor/{doctorId}/{startDateEvent}/{endDateEvent}/{fileReportName}", r.reportPeriodByDoctorBetweenDateEvent)
 			api.Get("/reports/file/reportVisitResult/{visitId}/{fileReportName}", r.reportVisitResult)
 			api.Get("/reports/file/reportNalogSpravka/{clientID}/{dateEventFrom}/{dateEventTo}/{payerFio}/{genderOfPayer}/{relationPayerToClient}/{isClientSelfPayer}/{fileReportName}", r.reportNalogSpravka)
-			api.Get("/reports/file/reportContract/{clientID}/{doctorID}/{visitID}/{dateEvent}", r.reportContract)
+			api.Get("/reports/file/reportContract/{clientID}/{doctorID}/{visitID}/{dateEvent}/contract.xlsx", r.reportContract)
 		})
 	})
 

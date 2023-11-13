@@ -71,7 +71,7 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		superTotalSumStr = fmt.Sprintf("%.2f", superTotalSum)
 	}
 
-	numberOfNalogSpravka, err := s.Engine.GetNalogSpravkaSeq()
+	numberOfNalogSpravka, err := s.Engine.GetSeq("nalogSpravkaNum")
 	if err != nil {
 		log.Printf("[ERROR] cannot get numberOfNalogSpravka #%v", err)
 		return nil, err
@@ -185,7 +185,7 @@ func (s *DataStore) BuildReportNalogSpravka(req ReportNalogSpravkaReq) ([]byte, 
 		return nil, err
 	}
 
-	err = s.Engine.IncrementNalogSpravkaSeq(numberOfNalogSpravka + 1)
+	err = s.Engine.IncrementSeq(numberOfNalogSpravka+1, "nalogSpravkaNum")
 	if err != nil {
 		log.Printf("[ERROR] cannot increment number of sequence for nalog spravka report")
 	}

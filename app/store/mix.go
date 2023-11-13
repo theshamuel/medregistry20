@@ -196,8 +196,16 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 	return res, nil
 }
 
-func (s *Mix) GetNalogSpravkaSeq() (int, error) {
-	filter := bson.M{"code": "nalogSpravkaNum"}
+func (s *Mix) IncrementSeq(idx int, code string) error {
+	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
+	filter := bson.M{"code": code}
+	update := bson.D{{"$set", bson.D{{"seq", idx}}}}
+	_, err := sequenceCollection.UpdateOne(context.TODO(), filter, update)
+	return err
+}
+
+func (s *Mix) GetSeq(code string) (int, error) {
+	filter := bson.M{"code": code}
 	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
 
 	var seq SequenceModel
@@ -206,14 +214,6 @@ func (s *Mix) GetNalogSpravkaSeq() (int, error) {
 	}
 
 	return seq.Seq, nil
-}
-
-func (s *Mix) IncrementNalogSpravkaSeq(idx int) error {
-	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
-	filter := bson.M{"code": "nalogSpravkaNum"}
-	update := bson.D{{"$set", bson.D{{"seq", idx}}}}
-	_, err := sequenceCollection.UpdateOne(context.TODO(), filter, update)
-	return err
 }
 
 func (s *Mix) Close() error {

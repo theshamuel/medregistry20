@@ -6,7 +6,6 @@ import (
 	"github.com/theshamuel/medregistry20/app/rest"
 	"github.com/theshamuel/medregistry20/app/service"
 	"github.com/theshamuel/medregistry20/app/store"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -64,7 +63,7 @@ func (sc *ServerCommand) Execute(_ []string) error {
 	log.Printf("[INFO] server args:\n"+
 		"		port: %d;\n"+
 		"		report path: %s;\n"+
-		"		mongoURL %s;\n"+
+		"		mongoURL: %s;\n"+
 		"		medregAPIV1URL: %s;\n"+
 		"		store engine type: %s;\n",
 		sc.Port, sc.ReportsPath, sc.MongoURL, sc.MedregAPIV1URL, sc.StoreEngine.Type)
@@ -155,8 +154,7 @@ func (sc *ServerCommand) buildDataEngine() (result store.EngineInterface, err er
 			return nil, errors.Errorf("can't initialize data store because failed to establish mongo connection: %s", sc.StoreEngine.Type)
 		}
 
-		var result bson.M
-		if err := client.Database("medregDB").RunCommand(context.Background(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+		if err := client.Ping(context.Background(), nil); err != nil {
 			log.Printf("[ERROR] cannot ping medregDB: %#v", err)
 			return nil, errors.New("cannot connect to MongoDB")
 		}

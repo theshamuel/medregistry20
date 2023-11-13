@@ -131,19 +131,22 @@ func (s *Remote) CompanyDetail() (company model.Company, err error) {
 	return company, nil
 }
 
+// FindVisitsByClientIDSinceTill
 // nolint: revive
 func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, endDateEvent string) ([]model.Visit, error) {
 	return nil, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine")
 }
 
+// IncrementSeq
 // nolint: revive
-func (s *Remote) GetNalogSpravkaSeq() (int, error) {
-	return 0, errors.New("not implemented")
+func (s *Remote) IncrementSeq(idx int, code string) error {
+	return errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine")
 }
 
+// GetSeq
 // nolint: revive
-func (s *Remote) IncrementNalogSpravkaSeq(idx int) error {
-	return errors.New("not implemented")
+func (s *Remote) GetSeq(code string) (int, error) {
+	return -1, errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine")
 }
 
 func (s *Remote) Close() error {
