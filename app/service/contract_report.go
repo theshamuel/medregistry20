@@ -46,12 +46,7 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 		log.Printf("[ERROR] cannot get contract date #%v", err)
 		return nil, err
 	}
-	//org, err := s.Engine.CompanyDetail()
-	//if err != nil {
-	//	log.Printf("[ERROR] cannot org details #%v", err)
-	//	return nil, err
-	//}
-	//
+
 	//visit, err := s.Engine.FindVisitByID(req.VisitID)
 	//if err != nil {
 	//	log.Printf("[ERROR] cannot get visit #%v", err)
@@ -64,14 +59,63 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 		return nil, err
 	}
 
-	//Fill up client FIO
+	//Fill up client info
+	// Name
 	clientNameCell := f.GetCellValue(sheetName, "R6")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
 	f.SetCellStr(sheetName, "R6", clientNameCell)
 
-	clientNameCell = f.GetCellValue(sheetName, "L73")
+	clientNameCell = f.GetCellValue(sheetName, "N73")
+	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
+	f.SetCellStr(sheetName, "N73", clientNameCell)
+
+	clientNameCell = f.GetCellValue(sheetName, "A11")
+	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
+	f.SetCellStr(sheetName, "A11", clientNameCell)
+
+	clientNameCell = f.GetCellValue(sheetName, "J83")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullNameShort)
-	f.SetCellStr(sheetName, "L73", clientNameCell)
+	f.SetCellStr(sheetName, "J83", clientNameCell)
+
+	clientNameCell = f.GetCellValue(sheetName, "J91")
+	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullNameShort)
+	f.SetCellStr(sheetName, "J91", clientNameCell)
+
+	// Birthday
+	clientBDCell := f.GetCellValue(sheetName, "L74")
+	clientBDCell = strings.ReplaceAll(clientBDCell, "[clientBirthday]", client.Birthday.Format("02.01.2006"))
+	f.SetCellStr(sheetName, "L74", clientBDCell)
+
+	// Address
+	clientAddressCell := f.GetCellValue(sheetName, "A11")
+	clientAddressCell = strings.ReplaceAll(clientAddressCell, "[clientAddress]", client.Address)
+	f.SetCellStr(sheetName, "A11", clientAddressCell)
+
+	clientAddressCell = f.GetCellValue(sheetName, "M75")
+	clientAddressCell = strings.ReplaceAll(clientAddressCell, "[clientAddress]", client.Address)
+	f.SetCellStr(sheetName, "M75", clientAddressCell)
+
+	// Phone
+	clientPhoneCell := f.GetCellValue(sheetName, "A11")
+	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
+	f.SetCellStr(sheetName, "A11", clientPhoneCell)
+
+	clientPhoneCell = f.GetCellValue(sheetName, "A49")
+	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
+	f.SetCellStr(sheetName, "A49", clientPhoneCell)
+
+	clientPhoneCell = f.GetCellValue(sheetName, "N76")
+	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
+	f.SetCellStr(sheetName, "N76", clientPhoneCell)
+
+	// Email
+	clientEmailCell := f.GetCellValue(sheetName, "P77")
+	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
+	f.SetCellStr(sheetName, "P77", clientEmailCell)
+
+	clientEmailCell = f.GetCellValue(sheetName, "A49")
+	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
+	f.SetCellStr(sheetName, "A49", clientEmailCell)
 
 	//Fill up contract number
 	contractNumCell := f.GetCellValue(sheetName, "H8")

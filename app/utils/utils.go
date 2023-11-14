@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,4 +62,29 @@ func ConvertExcelFileToBytes(f *excelize.File) ([]byte, error) {
 
 	res, _ := os.ReadFile(fileName)
 	return res, nil
+}
+
+func GetEmailValue(email string) string {
+	value := strings.TrimSpace(email)
+
+	if len(value) == 0 {
+		return "не представлен"
+	}
+
+	return value
+}
+
+func GetPhoneValue(phone string) string {
+	value := strings.TrimSpace(phone)
+
+	if len(value) == 0 {
+		return "не представлен"
+	}
+
+	if !strings.Contains(value, "+7") &&
+		len(value) < 11 {
+		value = fmt.Sprintf("+7%s", phone)
+	}
+
+	return value
 }
