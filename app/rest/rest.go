@@ -102,7 +102,7 @@ func (r *Rest) routes() chi.Router {
 			api.Get("/reports/file/reportPeriodByDoctor/{doctorId}/{startDateEvent}/{endDateEvent}/{fileReportName}", r.reportPeriodByDoctorBetweenDateEvent)
 			api.Get("/reports/file/reportVisitResult/{visitId}/{fileReportName}", r.reportVisitResult)
 			api.Get("/reports/file/reportNalogSpravka/{clientID}/{dateEventFrom}/{dateEventTo}/{payerFio}/{genderOfPayer}/{relationPayerToClient}/{isClientSelfPayer}/{fileReportName}", r.reportNalogSpravka)
-			api.Get("/reports/file/reportContract/{clientID}/{doctorID}/{visitID}/{dateEvent}/contract.xlsx", r.reportContract)
+			api.Get("/reports/file/reportContract/{clientID}/{visitID}/{dateEvent}/{fileReportName}", r.reportContract)
 		})
 	})
 
@@ -180,13 +180,11 @@ func (r *Rest) reportNalogSpravka(w http.ResponseWriter, req *http.Request) {
 func (r *Rest) reportContract(w http.ResponseWriter, req *http.Request) {
 	log.Printf("[INFO] reportContract")
 	clientID := chi.URLParam(req, "clientID")
-	doctorID := chi.URLParam(req, "doctorID")
 	visitID := chi.URLParam(req, "visitID")
 	dateEvent := chi.URLParam(req, "dateEvent")
 
 	reportReq := service.ReportContractReq{
 		ClientID:  clientID,
-		DoctorID:  doctorID,
 		VisitID:   visitID,
 		DateEvent: dateEvent,
 	}

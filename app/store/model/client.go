@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Client struct {
 	ID                string `json:"id"`
@@ -16,6 +18,7 @@ type Client struct {
 	PassportSerial    string `json:"passportSerial"`
 	PassportNumber    string `json:"passportNumber"`
 	PassportPlace     string `json:"passportPlace,omitempty"`
+	PassportDate      string `json:"passportDate,omitempty"`
 	PassportCodePlace string `json:"passportCodePlace,omitempty"`
 	Address           string `json:"address,omitempty"`
 	Birthday          time.Time
