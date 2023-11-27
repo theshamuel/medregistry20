@@ -76,26 +76,26 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
 	f.SetCellStr(sheetName, "R6", clientNameCell)
 
-	clientNameCell = f.GetCellValue(sheetName, "N73")
+	clientNameCell = f.GetCellValue(sheetName, "N107")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
-	f.SetCellStr(sheetName, "N73", clientNameCell)
+	f.SetCellStr(sheetName, "N107", clientNameCell)
 
 	clientNameCell = f.GetCellValue(sheetName, "A11")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullName)
 	f.SetCellStr(sheetName, "A11", clientNameCell)
 
-	clientNameCell = f.GetCellValue(sheetName, "J83")
+	clientNameCell = f.GetCellValue(sheetName, "J117")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullNameShort)
-	f.SetCellStr(sheetName, "J83", clientNameCell)
+	f.SetCellStr(sheetName, "J117", clientNameCell)
 
-	clientNameCell = f.GetCellValue(sheetName, "J91")
+	clientNameCell = f.GetCellValue(sheetName, "J125")
 	clientNameCell = strings.ReplaceAll(clientNameCell, "[clientName]", clientFullNameShort)
-	f.SetCellStr(sheetName, "J91", clientNameCell)
+	f.SetCellStr(sheetName, "J125", clientNameCell)
 
 	// Birthday
-	clientBDCell := f.GetCellValue(sheetName, "L74")
+	clientBDCell := f.GetCellValue(sheetName, "L108")
 	clientBDCell = strings.ReplaceAll(clientBDCell, "[clientBirthday]", client.Birthday.Format("02.01.2006"))
-	f.SetCellStr(sheetName, "L74", clientBDCell)
+	f.SetCellStr(sheetName, "L108", clientBDCell)
 
 	// Passport
 	clientPassportCell := f.GetCellValue(sheetName, "A11")
@@ -111,40 +111,40 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	clientAddressCell = strings.ReplaceAll(clientAddressCell, "[clientAddress]", client.Address)
 	f.SetCellStr(sheetName, "A11", clientAddressCell)
 
-	clientAddressCell = f.GetCellValue(sheetName, "M75")
+	clientAddressCell = f.GetCellValue(sheetName, "M109")
 	clientAddressCell = strings.ReplaceAll(clientAddressCell, "[clientAddress]", client.Address)
-	f.SetCellStr(sheetName, "M75", clientAddressCell)
+	f.SetCellStr(sheetName, "M109", clientAddressCell)
 
 	// Phone
 	clientPhoneCell := f.GetCellValue(sheetName, "A11")
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
 	f.SetCellStr(sheetName, "A11", clientPhoneCell)
 
-	clientPhoneCell = f.GetCellValue(sheetName, "A49")
+	clientPhoneCell = f.GetCellValue(sheetName, "A183")
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
-	f.SetCellStr(sheetName, "A49", clientPhoneCell)
+	f.SetCellStr(sheetName, "A183", clientPhoneCell)
 
-	clientPhoneCell = f.GetCellValue(sheetName, "N76")
+	clientPhoneCell = f.GetCellValue(sheetName, "N110")
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
-	f.SetCellStr(sheetName, "N76", clientPhoneCell)
+	f.SetCellStr(sheetName, "N110", clientPhoneCell)
 
 	// Email
-	clientEmailCell := f.GetCellValue(sheetName, "P77")
+	clientEmailCell := f.GetCellValue(sheetName, "P111")
 	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
-	f.SetCellStr(sheetName, "P77", clientEmailCell)
+	f.SetCellStr(sheetName, "P111", clientEmailCell)
 
-	clientEmailCell = f.GetCellValue(sheetName, "A49")
+	clientEmailCell = f.GetCellValue(sheetName, "A183")
 	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
-	f.SetCellStr(sheetName, "A49", clientEmailCell)
+	f.SetCellStr(sheetName, "A183", clientEmailCell)
 
 	//Fill up contract number
 	contractNumCell := f.GetCellValue(sheetName, "H8")
 	contractNumCell = strings.ReplaceAll(contractNumCell, "[contractNum]", fmt.Sprintf("%d", contractNumber))
 	f.SetCellStr(sheetName, "H8", contractNumCell)
 
-	contractNumCell = f.GetCellValue(sheetName, "A89")
+	contractNumCell = f.GetCellValue(sheetName, "A123")
 	contractNumCell = strings.ReplaceAll(contractNumCell, "[contractNum]", fmt.Sprintf("%d", contractNumber))
-	f.SetCellStr(sheetName, "A89", contractNumCell)
+	f.SetCellStr(sheetName, "A123", contractNumCell)
 
 	//Fill up contract date
 	contractDateCell := f.GetCellValue(sheetName, "F6")
@@ -152,13 +152,13 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	contractDateCell = strings.ReplaceAll(contractDateCell, "[date]", prepDate.Format("02.01.2006"))
 	f.SetCellStr(sheetName, "F6", contractDateCell)
 
-	contractDateCell = f.GetCellValue(sheetName, "A89")
+	contractDateCell = f.GetCellValue(sheetName, "A123")
 	contractDateCell = strings.ReplaceAll(contractDateCell, "[contractDate]", contractDate.Format("02.01.2006"))
-	f.SetCellStr(sheetName, "A89", contractDateCell)
+	f.SetCellStr(sheetName, "A123", contractDateCell)
 
-	contractDateCell = f.GetCellValue(sheetName, "A87")
+	contractDateCell = f.GetCellValue(sheetName, "A121")
 	contractDateCell = strings.ReplaceAll(contractDateCell, "[contractDate]", contractDate.Format("02.01.2006"))
-	f.SetCellStr(sheetName, "A87", contractDateCell)
+	f.SetCellStr(sheetName, "A121", contractDateCell)
 
 	contractDateCell = f.GetCellValue(sheetName, "A9")
 	contractDateCell = strings.ReplaceAll(contractDateCell, "[day]", fmt.Sprintf("%02d", contractDate.Day()))
@@ -179,7 +179,18 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 		return nil, err
 	}
 	startIndex := 22
+
+	// For case when services more than 6 we need to unhide necessary count of hidden rows
+	for i := 0; i < len(serviceTable.Records)-6; i++ {
+		f.SetRowVisible(f.GetSheetName(1), 26+i, true)
+	}
+
 	for i, k := range serviceTable.Records {
+		// For case when services more than 5 we need to fill up the bottom line of services table but
+		// the index of this row is 61, so I need this condition below to recalculate startIndex
+		if i == len(serviceTable.Records)-1 && len(serviceTable.Records) > 5 {
+			startIndex = 61 - i
+		}
 		f.SetCellStr(sheetName, fmt.Sprintf("B%d", startIndex+i), fmt.Sprintf("%d", i+1))
 		f.SetCellStr(sheetName, fmt.Sprintf("C%d", startIndex+i), k.Name)
 		f.SetCellStr(sheetName, fmt.Sprintf("O%d", startIndex+i), fmt.Sprintf("%d", k.Quantity))
@@ -188,9 +199,9 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	}
 
 	if len(serviceTable.Records) > 0 {
-		totalSumCell := f.GetCellValue(sheetName, "A89")
+		totalSumCell := f.GetCellValue(sheetName, "A123")
 		totalSumCell = strings.ReplaceAll(totalSumCell, "[totalSum]", fmt.Sprintf("%d", serviceTable.TotalSum))
-		f.SetCellStr(sheetName, "A89", totalSumCell)
+		f.SetCellStr(sheetName, "A123", totalSumCell)
 	}
 
 	res, err := utils.ConvertExcelFileToBytes(f)
