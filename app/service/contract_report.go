@@ -54,16 +54,29 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 		return nil, err
 	}
 
-	clientFullName := fmt.Sprintf("%s %s %s",
-		caser.String(strings.ToTitle(client.Surname)),
-		caser.String(strings.ToTitle(client.Firstname)),
-		caser.String(strings.ToTitle(client.Middlename)))
+	isMiddlename := client.Middlename != ""
+	clientFullName := ""
+	clientFullNameShort := ""
+	if isMiddlename {
+		clientFullName = fmt.Sprintf("%s %s %s",
+			caser.String(strings.ToTitle(client.Surname)),
+			caser.String(strings.ToTitle(client.Firstname)),
+			caser.String(strings.ToTitle(client.Middlename)))
 
-	clientFullNameShort := fmt.Sprintf("%s %s. %s.",
-		caser.String(strings.ToTitle(client.Surname)),
-		client.Firstname[:2],
-		client.Middlename[:2])
+		clientFullNameShort = fmt.Sprintf("%s %s. %s.",
+			caser.String(strings.ToTitle(client.Surname)),
+			client.Firstname[:2],
+			client.Middlename[:2])
+	} else {
+		clientFullName = fmt.Sprintf("%s %s",
+			caser.String(strings.ToTitle(client.Surname)),
+			caser.String(strings.ToTitle(client.Firstname)))
 
+		clientFullNameShort = fmt.Sprintf("%s %s.",
+			caser.String(strings.ToTitle(client.Surname)),
+			client.Firstname[:2])
+	}
+	
 	contractNumber, err := s.Engine.GetSeq("contractNum")
 	if err != nil {
 		log.Printf("[ERROR] cannot get contractNum #%v", err)
