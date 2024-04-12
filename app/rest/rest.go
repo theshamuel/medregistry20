@@ -30,6 +30,7 @@ type restInterface interface {
 	BuildReportVisitResult(visitID string) ([]byte, error)
 	BuildReportNalogSpravka(req service.ReportNalogSpravkaReq) ([]byte, error)
 	BuildReportContract(req service.ReportContractReq) ([]byte, error)
+	BuildReportOfPeriodProfit(startDateEvent, endDateEvent string) ([]byte, error)
 }
 
 // Run http server
@@ -103,6 +104,7 @@ func (r *Rest) routes() chi.Router {
 			api.Get("/reports/file/reportVisitResult/{visitId}/{fileReportName}", r.reportVisitResult)
 			api.Get("/reports/file/reportNalogSpravka/{clientID}/{dateEventFrom}/{dateEventTo}/{payerFio}/{genderOfPayer}/{relationPayerToClient}/{isClientSelfPayer}/{fileReportName}", r.reportNalogSpravka)
 			api.Get("/reports/file/reportContract/{clientID}/{visitID}/{dateEvent}/{fileReportName}", r.reportContract)
+			api.Get("/reports/file/reportPeriodProfit/{startDateEvent}/{endDateEvent}/{fileReportName}", r.reportOfPeriodProfit)
 		})
 	})
 
@@ -199,6 +201,18 @@ func (r *Rest) reportContract(w http.ResponseWriter, req *http.Request) {
 	_, err = w.Write(file)
 	if err != nil {
 		log.Printf("[ERROR] cannot write contract response %#v", err)
+		return
+	}
+}
+
+func (r *Rest) reportOfPeriodProfit(w http.ResponseWriter, req *http.Request) {
+	startDateEvent := chi.URLParam(req, "startDateEvent")
+	endDateEvent := chi.URLParam(req, "endDateEvent")
+	file, err := r.DataService.BuildReportOfPeriodProfit(startDateEvent, endDateEvent)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, err = w.Write(file)
+	if err != nil {
+		log.Printf("[ERROR] cannot write by doctor in period response %#v", err)
 		return
 	}
 }
