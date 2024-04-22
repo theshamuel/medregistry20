@@ -61,6 +61,7 @@ func (s *Remote) FindVisitByID(visitID string) (visit model.Visit, err error) {
 	}
 	return visit, nil
 }
+
 func (s *Remote) FindClientByID(clientID string) (client model.Client, err error) {
 	log.Printf("[INFO] FindClientByID params clientID=%s;", clientID)
 	s.Client = &utils.Repeater{
@@ -108,6 +109,27 @@ func (s *Remote) FindDoctorByID(doctorID string) (doctor model.Doctor, err error
 		return doctor, err
 	}
 	return doctor, nil
+}
+
+func (s *Remote) FindDoctors() (doctors []model.Doctor, err error) {
+	log.Println("[INFO] FindDoctors")
+	s.Client = &utils.Repeater{
+		ClientTimeout: 10,
+		Attempts:      10,
+		URI:           s.URI + "/doctors/",
+		Count:         3,
+	}
+	data, err := s.Client.Get()
+	if err != nil {
+		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
+	}
+
+	err = json.Unmarshal(data, &doctors)
+	if err != nil {
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
+		return doctors, err
+	}
+	return doctors, nil
 }
 
 func (s *Remote) CompanyDetail() (company model.Company, err error) {

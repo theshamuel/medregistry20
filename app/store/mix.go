@@ -37,7 +37,7 @@ func (s *Mix) FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDa
 	var visits []model.Visit
 	err = json.Unmarshal(data, &visits)
 	if err != nil {
-		log.Printf("[ERROR] cannot unmarshar response %#v", err)
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
 		return nil, err
 	}
 	return visits, nil
@@ -63,11 +63,12 @@ func (s *Mix) FindVisitByID(visitID string) (visit model.Visit, err error) {
 	}
 
 	if err != nil {
-		log.Printf("[ERROR] cannot unmarshar response %#v", err)
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
 		return visit, err
 	}
 	return visit, nil
 }
+
 func (s *Mix) FindClientByID(clientID string) (client model.Client, err error) {
 	log.Printf("[INFO] FindClientByID params clientID=%s;", clientID)
 	s.HTTPClient = &utils.Repeater{
@@ -90,7 +91,7 @@ func (s *Mix) FindClientByID(clientID string) (client model.Client, err error) {
 	}
 
 	if err != nil {
-		log.Printf("[ERROR] cannot unmarshar response %#v", err)
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
 		return client, err
 	}
 	return client, nil
@@ -111,10 +112,31 @@ func (s *Mix) FindDoctorByID(doctorID string) (doctor model.Doctor, err error) {
 
 	err = json.Unmarshal(data, &doctor)
 	if err != nil {
-		log.Printf("[ERROR] cannot unmarshar response %#v", err)
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
 		return doctor, err
 	}
 	return doctor, nil
+}
+
+func (s *Mix) FindDoctors() (doctors []model.Doctor, err error) {
+	log.Println("[INFO] FindDoctors")
+	s.HTTPClient = &utils.Repeater{
+		ClientTimeout: 10,
+		Attempts:      10,
+		URI:           s.URI + "/doctors/",
+		Count:         3,
+	}
+	data, err := s.HTTPClient.Get()
+	if err != nil {
+		log.Printf("[ERROR] cannot receive data from MedRegistry API v1")
+	}
+
+	err = json.Unmarshal(data, &doctors)
+	if err != nil {
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
+		return doctors, err
+	}
+	return doctors, nil
 }
 
 func (s *Mix) CompanyDetail() (company model.Company, err error) {
@@ -132,7 +154,7 @@ func (s *Mix) CompanyDetail() (company model.Company, err error) {
 
 	err = json.Unmarshal(data, &company)
 	if err != nil {
-		log.Printf("[ERROR] cannot unmarshar response %#v", err)
+		log.Printf("[ERROR] cannot unmarshal response %#v", err)
 		return company, err
 	}
 	return company, nil

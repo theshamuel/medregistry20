@@ -30,6 +30,9 @@ var _ EngineInterface = &EngineInterfaceMock{}
 //			FindDoctorByIDFunc: func(id string) (model.Doctor, error) {
 //				panic("mock out the FindDoctorByID method")
 //			},
+//			FindDoctorsFunc: func() ([]model.Doctor, error) {
+//				panic("mock out the FindDoctors method")
+//			},
 //			FindVisitByIDFunc: func(id string) (model.Visit, error) {
 //				panic("mock out the FindVisitByID method")
 //			},
@@ -64,6 +67,9 @@ type EngineInterfaceMock struct {
 	// FindDoctorByIDFunc mocks the FindDoctorByID method.
 	FindDoctorByIDFunc func(id string) (model.Doctor, error)
 
+	// FindDoctorsFunc mocks the FindDoctors method.
+	FindDoctorsFunc func() ([]model.Doctor, error)
+
 	// FindVisitByIDFunc mocks the FindVisitByID method.
 	FindVisitByIDFunc func(id string) (model.Visit, error)
 
@@ -96,6 +102,9 @@ type EngineInterfaceMock struct {
 		FindDoctorByID []struct {
 			// ID is the id argument value.
 			ID string
+		}
+		// FindDoctors holds details about calls to the FindDoctors method.
+		FindDoctors []struct {
 		}
 		// FindVisitByID holds details about calls to the FindVisitByID method.
 		FindVisitByID []struct {
@@ -137,6 +146,7 @@ type EngineInterfaceMock struct {
 	lockCompanyDetail                 sync.RWMutex
 	lockFindClientByID                sync.RWMutex
 	lockFindDoctorByID                sync.RWMutex
+	lockFindDoctors                   sync.RWMutex
 	lockFindVisitByID                 sync.RWMutex
 	lockFindVisitsByClientIDSinceTill sync.RWMutex
 	lockFindVisitsByDoctorSinceTill   sync.RWMutex
@@ -259,6 +269,33 @@ func (mock *EngineInterfaceMock) FindDoctorByIDCalls() []struct {
 	mock.lockFindDoctorByID.RLock()
 	calls = mock.calls.FindDoctorByID
 	mock.lockFindDoctorByID.RUnlock()
+	return calls
+}
+
+// FindDoctors calls FindDoctorsFunc.
+func (mock *EngineInterfaceMock) FindDoctors() ([]model.Doctor, error) {
+	if mock.FindDoctorsFunc == nil {
+		panic("EngineInterfaceMock.FindDoctorsFunc: method is nil but EngineInterface.FindDoctors was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockFindDoctors.Lock()
+	mock.calls.FindDoctors = append(mock.calls.FindDoctors, callInfo)
+	mock.lockFindDoctors.Unlock()
+	return mock.FindDoctorsFunc()
+}
+
+// FindDoctorsCalls gets all the calls that were made to FindDoctors.
+// Check the length with:
+//
+//	len(mockedEngineInterface.FindDoctorsCalls())
+func (mock *EngineInterfaceMock) FindDoctorsCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockFindDoctors.RLock()
+	calls = mock.calls.FindDoctors
+	mock.lockFindDoctors.RUnlock()
 	return calls
 }
 
