@@ -218,6 +218,72 @@ func (s *Mix) FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, 
 	return res, nil
 }
 
+func (s *Mix) GetProfitByDoctorSinceTill(startDateEventStr, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error) {
+
+	res := make([]model.ProfitByDoctorSinceTillRecord, 0)
+
+	startDateEvent, err := time.Parse("2006-01-02", startDateEventStr)
+	if err != nil {
+		return nil, err
+	}
+
+	endDateEvent, err := time.Parse("2006-01-02", endDateEventStr)
+	if err != nil {
+		return nil, err
+	}
+
+	startDateEventB := primitive.NewDateTimeFromTime(time.Date(startDateEvent.Year(), startDateEvent.Month(),
+		startDateEvent.Day(), 0, 0, 0, 0, time.UTC))
+	endDateEventB := primitive.NewDateTimeFromTime(time.Date(endDateEvent.Year(), endDateEvent.Month(),
+		endDateEvent.Day(), 23, 59, 59, 0, time.UTC))
+	//[
+	//    {
+	//        $match:
+	//            {
+	//                'dateEvent':
+	//                    {
+	//                        $gte: new Date("2023-01-01"),
+	//                        $lte: new Date("2023-12-31")
+	//                    }
+	//            }
+	//    },
+	//    {
+	//        $unwind: "$services"
+	//    },
+	//    {
+	//        $group:
+	//            {
+	//                _id: { id: "$doctor._id", surname: "$doctor.surname", name: { $concat: [{ $substrCP: ["$doctor.name", 0, 1] }, "."] }, middlename: { $concat: [{ $substrCP: ["$doctor.middlename", 0, 1] }, "."] } },
+	//                total: {
+	//                    "$sum":
+	//                        { "$toDouble": "$services.price" }
+	//                }
+	//            }
+	//    }
+	//]
+	var pipeline = mongo.Pipeline{
+		{{"$match", bson.D{{"dateEvent", bson.D{{"$gte", startDateEventB}, {"$lte", endDateEventB}}}}}},
+		{{"$unwind", bson.D{{"path", "$services"}}}},
+		{{"$group", bson.D{{"_id", bson.D{{"id", "$doctor._id"}, {"surname", "$doctor.surname"}, {"name", bson.A{{???}}}}}, {"total", bson.D{{"$sum", bson.D{{"$toDouble", "$services.price"}}}}}}}},
+	}
+
+	visitsCollection := s.MongoClient.Database("medregDB").Collection("visits")
+	cursor, err := visitsCollection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var visitsBson []ProfitByDoctorModel
+	if err = cursor.All(context.Background(), &visitsBson); err != nil {
+		return nil, err
+	}
+
+	//caser := cases.Title(language.Russian)
+
+	return res, nil
+}
+
 func (s *Mix) IncrementSeq(idx int, code string) error {
 	sequenceCollection := s.MongoClient.Database("medregDB").Collection("sequence")
 	filter := bson.M{"code": code}

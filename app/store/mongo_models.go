@@ -13,6 +13,16 @@ type VisitModel struct {
 	TotalSum  int
 }
 
+type ProfitByDoctorModel struct {
+	ID struct {
+		ID         primitive.ObjectID `bson:"id"`
+		Surname    string             `bson:"surname"`
+		Name       string             `bson:"name"`
+		Middlename string             `bson:"middlename"`
+	} `bson:"_id"`
+	TotalSum float64 `bson:"total"`
+}
+
 type ClientModel struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Name       string             `bson:"name,omitempty"`

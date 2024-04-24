@@ -18,6 +18,16 @@ type ServiceReport struct {
 	DoctorRate  int
 }
 
+type ProfitByDoctorSinceTillRecord struct {
+	ID struct {
+		ID         string
+		Surname    string
+		Name       string
+		Middlename string
+	}
+	TotalSum float64
+}
+
 func ProcessDataDoctorSalaryRecord(visits []Visit) map[string]*DoctorSalaryRecord {
 	var res = make(map[string]*DoctorSalaryRecord)
 	for _, visit := range visits {
@@ -40,14 +50,14 @@ func mapServices(dsr *DoctorSalaryRecord, services []Service) *DoctorSalaryRecor
 	//Because of in total sum for visit pcr could be included once we're using this flag
 	addedPCRPrice := false
 	for _, service := range services {
-		if addedPCRPrice && service.Category == "pcr" || service.Category == "mazok"{
+		if addedPCRPrice && service.Category == "pcr" || service.Category == "mazok" {
 			continue
 		}
 		//Cut off a tail of ID. ID=_id+MEDREG+Random(int). It is necessary for available in visit duplication of services in grid.
 		service.ID = strings.Split(service.ID, "MEDREG")[0]
 		if _, ok := dsr.Services[service.ID]; !ok {
 			//Check if this service should be paid (exclude analizys)
-			if service.DoctorPay > 0  {
+			if service.DoctorPay > 0 {
 				personalRate, err := calcPersonalRate(service, dsr.ID)
 				if err != nil {
 					log.Printf("[DEBUG] not personal rate for %s; %s", dsr.ID, err.Error())
@@ -58,7 +68,7 @@ func mapServices(dsr *DoctorSalaryRecord, services []Service) *DoctorSalaryRecor
 				}
 				if service.Category == "pcr" && addedPCRPrice {
 					srv.DoctorRate = 0
-				} else if service.Category == "pcr" && !addedPCRPrice{
+				} else if service.Category == "pcr" && !addedPCRPrice {
 					addedPCRPrice = true
 				}
 				dsr.Services[service.ID] = srv
@@ -87,8 +97,8 @@ func calcPersonalRate(s Service, doctorID string) (*PersonalRate, error) {
 	return nil, errors.New("can't found personal rate")
 }
 
-//Increment count of equals services through all doctor's visits
-func incCountService(doctorSalaryRecord *DoctorSalaryRecord, serviceID string){
+// Increment count of equals services through all doctor's visits
+func incCountService(doctorSalaryRecord *DoctorSalaryRecord, serviceID string) {
 	tmp := doctorSalaryRecord.Services[serviceID]
 	tmp.Count = tmp.Count + 1
 	doctorSalaryRecord.Services[serviceID] = tmp
