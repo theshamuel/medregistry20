@@ -42,6 +42,9 @@ var _ EngineInterface = &EngineInterfaceMock{}
 //			FindVisitsByDoctorSinceTillFunc: func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error) {
 //				panic("mock out the FindVisitsByDoctorSinceTill method")
 //			},
+//			GetProfitByDoctorSinceTillFunc: func(startDateEventStr string, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error) {
+//				panic("mock out the GetProfitByDoctorSinceTill method")
+//			},
 //			GetSeqFunc: func(code string) (int, error) {
 //				panic("mock out the GetSeq method")
 //			},
@@ -78,6 +81,9 @@ type EngineInterfaceMock struct {
 
 	// FindVisitsByDoctorSinceTillFunc mocks the FindVisitsByDoctorSinceTill method.
 	FindVisitsByDoctorSinceTillFunc func(doctorID string, startDateEvent string, endDateEvent string) ([]model.Visit, error)
+
+	// GetProfitByDoctorSinceTillFunc mocks the GetProfitByDoctorSinceTill method.
+	GetProfitByDoctorSinceTillFunc func(startDateEventStr string, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error)
 
 	// GetSeqFunc mocks the GetSeq method.
 	GetSeqFunc func(code string) (int, error)
@@ -129,6 +135,13 @@ type EngineInterfaceMock struct {
 			// EndDateEvent is the endDateEvent argument value.
 			EndDateEvent string
 		}
+		// GetProfitByDoctorSinceTill holds details about calls to the GetProfitByDoctorSinceTill method.
+		GetProfitByDoctorSinceTill []struct {
+			// StartDateEventStr is the startDateEventStr argument value.
+			StartDateEventStr string
+			// EndDateEventStr is the endDateEventStr argument value.
+			EndDateEventStr string
+		}
 		// GetSeq holds details about calls to the GetSeq method.
 		GetSeq []struct {
 			// Code is the code argument value.
@@ -150,6 +163,7 @@ type EngineInterfaceMock struct {
 	lockFindVisitByID                 sync.RWMutex
 	lockFindVisitsByClientIDSinceTill sync.RWMutex
 	lockFindVisitsByDoctorSinceTill   sync.RWMutex
+	lockGetProfitByDoctorSinceTill    sync.RWMutex
 	lockGetSeq                        sync.RWMutex
 	lockIncrementSeq                  sync.RWMutex
 }
@@ -408,6 +422,42 @@ func (mock *EngineInterfaceMock) FindVisitsByDoctorSinceTillCalls() []struct {
 	mock.lockFindVisitsByDoctorSinceTill.RLock()
 	calls = mock.calls.FindVisitsByDoctorSinceTill
 	mock.lockFindVisitsByDoctorSinceTill.RUnlock()
+	return calls
+}
+
+// GetProfitByDoctorSinceTill calls GetProfitByDoctorSinceTillFunc.
+func (mock *EngineInterfaceMock) GetProfitByDoctorSinceTill(startDateEventStr string, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error) {
+	if mock.GetProfitByDoctorSinceTillFunc == nil {
+		panic("EngineInterfaceMock.GetProfitByDoctorSinceTillFunc: method is nil but EngineInterface.GetProfitByDoctorSinceTill was just called")
+	}
+	callInfo := struct {
+		StartDateEventStr string
+		EndDateEventStr   string
+	}{
+		StartDateEventStr: startDateEventStr,
+		EndDateEventStr:   endDateEventStr,
+	}
+	mock.lockGetProfitByDoctorSinceTill.Lock()
+	mock.calls.GetProfitByDoctorSinceTill = append(mock.calls.GetProfitByDoctorSinceTill, callInfo)
+	mock.lockGetProfitByDoctorSinceTill.Unlock()
+	return mock.GetProfitByDoctorSinceTillFunc(startDateEventStr, endDateEventStr)
+}
+
+// GetProfitByDoctorSinceTillCalls gets all the calls that were made to GetProfitByDoctorSinceTill.
+// Check the length with:
+//
+//	len(mockedEngineInterface.GetProfitByDoctorSinceTillCalls())
+func (mock *EngineInterfaceMock) GetProfitByDoctorSinceTillCalls() []struct {
+	StartDateEventStr string
+	EndDateEventStr   string
+} {
+	var calls []struct {
+		StartDateEventStr string
+		EndDateEventStr   string
+	}
+	mock.lockGetProfitByDoctorSinceTill.RLock()
+	calls = mock.calls.GetProfitByDoctorSinceTill
+	mock.lockGetProfitByDoctorSinceTill.RUnlock()
 	return calls
 }
 

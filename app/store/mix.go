@@ -222,53 +222,86 @@ func (s *Mix) GetProfitByDoctorSinceTill(startDateEventStr, endDateEventStr stri
 
 	res := make([]model.ProfitByDoctorSinceTillRecord, 0)
 
-	startDateEvent, err := time.Parse("2006-01-02", startDateEventStr)
-	if err != nil {
-		return nil, err
-	}
+	//startDateEvent, err := time.Parse("2006-01-02", startDateEventStr)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//endDateEvent, err := time.Parse("2006-01-02", endDateEventStr)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	endDateEvent, err := time.Parse("2006-01-02", endDateEventStr)
-	if err != nil {
-		return nil, err
-	}
+	//startDateEventB := primitive.NewDateTimeFromTime(time.Date(startDateEvent.Year(), startDateEvent.Month(),
+	//	startDateEvent.Day(), 0, 0, 0, 0, time.UTC))
+	//endDateEventB := primitive.NewDateTimeFromTime(time.Date(endDateEvent.Year(), endDateEvent.Month(),
+	//	endDateEvent.Day(), 23, 59, 59, 0, time.UTC))
+	//pipeline := `[
+	//   {
+	//       $match:
+	//           {
+	//               'dateEvent':
+	//                   {
+	//                       $gte: new Date("[fromDate]"),
+	//                       $lte: new Date("[toDate]")
+	//                   }
+	//           }
+	//   },
+	//   {
+	//       $unwind: "$services"
+	//   },
+	//   {
+	//       $group:
+	//           {
+	//               _id: { id: "$doctor._id", surname: "$doctor.surname", name: { $concat: [{ $substrCP: ["$doctor.name", 0, 1] }, "."] }, middlename: { $concat: [{ $substrCP: ["$doctor.middlename", 0, 1] }, "."] } },
+	//               total: {
+	//                   "$sum":
+	//                       { "$toDouble": "$services.price" }
+	//               }
+	//           }
+	//   }
+	//]`
 
-	startDateEventB := primitive.NewDateTimeFromTime(time.Date(startDateEvent.Year(), startDateEvent.Month(),
-		startDateEvent.Day(), 0, 0, 0, 0, time.UTC))
-	endDateEventB := primitive.NewDateTimeFromTime(time.Date(endDateEvent.Year(), endDateEvent.Month(),
-		endDateEvent.Day(), 23, 59, 59, 0, time.UTC))
-	//[
-	//    {
-	//        $match:
-	//            {
-	//                'dateEvent':
-	//                    {
-	//                        $gte: new Date("2023-01-01"),
-	//                        $lte: new Date("2023-12-31")
-	//                    }
-	//            }
-	//    },
-	//    {
-	//        $unwind: "$services"
-	//    },
-	//    {
-	//        $group:
-	//            {
-	//                _id: { id: "$doctor._id", surname: "$doctor.surname", name: { $concat: [{ $substrCP: ["$doctor.name", 0, 1] }, "."] }, middlename: { $concat: [{ $substrCP: ["$doctor.middlename", 0, 1] }, "."] } },
-	//                total: {
-	//                    "$sum":
-	//                        { "$toDouble": "$services.price" }
-	//                }
-	//            }
-	//    }
-	//]
-	var pipeline = mongo.Pipeline{
-		{{"$match", bson.D{{"dateEvent", bson.D{{"$gte", startDateEventB}, {"$lte", endDateEventB}}}}}},
-		{{"$unwind", bson.D{{"path", "$services"}}}},
-		{{"$group", bson.D{{"_id", bson.D{{"id", "$doctor._id"}, {"surname", "$doctor.surname"}, {"name", bson.A{{???}}}}}, {"total", bson.D{{"$sum", bson.D{{"$toDouble", "$services.price"}}}}}}}},
-	}
+	pipeline := `
+[
+    {
+        $match:
+            {
+                'dateEvent':
+                    {
+                        $gte: new Date("2024-01-01"),
+                        $lte: new Date("2024-12-31")
+                    }
+            }
+    },
+    {
+        $unwind: "$services"
+    },
+    {
+        $group:
+            {
+                _id:null,
+                total: {
+                    "$sum":
+                        { "$toDouble": "$services.price" }
+                }
+            }
+    }]
+`
+	pipeline = strings.ReplaceAll(pipeline, "[fromDate]", startDateEventStr)
+	pipeline = strings.ReplaceAll(pipeline, "[toDate]", endDateEventStr)
+	//var pipeline = mongo.Pipeline{
+	//	{{"$match", bson.D{{"dateEvent", bson.D{{"$gte", startDateEventB}, {"$lte", endDateEventB}}}}}},
+	//	{{"$unwind", bson.D{{"path", "$services"}}}},
+	//	{{"$group", bson.D{{"_id", bson.D{{"id", "$doctor._id"}, {"surname", "$doctor.surname"}, {"name", bson.A{{???}}}}}, {"total", bson.D{{"$sum", bson.D{{"$toDouble", "$services.price"}}}}}}}},
+	//}
 
 	visitsCollection := s.MongoClient.Database("medregDB").Collection("visits")
-	cursor, err := visitsCollection.Aggregate(context.Background(), pipeline)
+	p, err := buildMongoPipelineFromStr(pipeline)
+	if err != nil {
+		return nil, err
+	}
+	cursor, err := visitsCollection.Aggregate(context.Background(), p)
 	if err != nil {
 		return nil, err
 	}
@@ -306,4 +339,23 @@ func (s *Mix) GetSeq(code string) (int, error) {
 
 func (s *Mix) Close() error {
 	return s.MongoClient.Disconnect(context.Background())
+}
+
+func buildMongoPipelineFromStr(input string) (mongo.Pipeline, error) {
+	var pipeline = []bson.D{}
+	input = strings.TrimSpace(input)
+	if strings.Index(input, "[") != 0 {
+		var doc bson.D
+		err := bson.UnmarshalExtJSON([]byte(input), false, &doc)
+		if err != nil {
+			return nil, err
+		}
+		pipeline = append(pipeline, doc)
+	} else {
+		err := bson.UnmarshalExtJSON([]byte(input), false, &pipeline)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return pipeline, nil
 }

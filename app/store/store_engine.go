@@ -12,6 +12,7 @@ type EngineInterface interface {
 	CompanyDetail() (model.Company, error)
 	FindVisitsByDoctorSinceTill(doctorID string, startDateEvent, endDateEvent string) ([]model.Visit, error)
 	FindVisitsByClientIDSinceTill(clientID string, startDateEventStr, endDateEventStr string) ([]model.Visit, error)
+	GetProfitByDoctorSinceTill(startDateEventStr, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error)
 	IncrementSeq(idx int, code string) error
 	GetSeq(code string) (int, error)
 	Close() error

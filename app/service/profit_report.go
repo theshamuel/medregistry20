@@ -1,8 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/theshamuel/medregistry20/app/utils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"log"
 	"strings"
 )
@@ -13,7 +16,7 @@ type ProfitReportRecord struct {
 }
 
 type ProfitReportTbl struct {
-	Records  []*ReportContractServiceRecord
+	Records  []*ProfitReportRecord
 	TotalSum int
 }
 
@@ -32,25 +35,28 @@ func (s *DataStore) BuildReportOfPeriodProfit(startDateEvent, endDateEvent strin
 	titleCell = strings.ReplaceAll(titleCell, "[endDate]", endDateEvent)
 	f.SetCellStr(sheetName, "A2", titleCell)
 
-	doctors, err := s.Engine.FindDoctors()
-	if err != nil {
-		log.Printf("[ERROR] cannot retrieve doctors from API server v1 #%v", err)
-		return nil, err
-	}
-
-	for _, doctor := range doctors {
-		log.Println(doctor.Surname)
-	}
-	//recordFileIndex := 5
-	doctorsData, err := buildDoctorProfitData()
+	doctorsData, err := s.buildDoctorProfitData(startDateEvent, endDateEvent)
 	if err != nil {
 		log.Printf("[ERROR] cannot buld doctor profit table in profit report #%v", err)
 		return nil, err
 	}
+	var cellCode string
+	var cellValue string
+	for i, record := range doctorsData.Records {
+		f.SetRowVisible(f.GetSheetName(1), 35-i, true)
+		//Fill up doctor name
+		cellCode = fmt.Sprintf("%s%d", "A", 35-i)
+		cellValue = record.Name
+		f.SetCellStr(sheetName, cellCode, cellValue)
 
-	for i := 0; i < len(doctorsData.Records)-1; i++ {
-		f.SetRowVisible(f.GetSheetName(1), 26+i, true)
+		//Fill up doctor's total
+		cellCode = fmt.Sprintf("%s%d", "B", 35-i)
+		f.SetCellInt(sheetName, cellCode, record.Sum)
 	}
+
+	//Fill up total sum
+	cellCode = "B36"
+	f.SetCellInt(sheetName, cellCode, doctorsData.TotalSum)
 
 	res, err := utils.ConvertExcelFileToBytes(f)
 	if err != nil {
@@ -61,9 +67,37 @@ func (s *DataStore) BuildReportOfPeriodProfit(startDateEvent, endDateEvent strin
 	return res, nil
 }
 
-func buildDoctorProfitData() (*ProfitReportTbl, error) {
+func (s *DataStore) buildDoctorProfitData(fromDate, toDate string) (*ProfitReportTbl, error) {
 	res := &ProfitReportTbl{}
-	res.Records = make([]*ReportContractServiceRecord, 0)
+	res.Records = make([]*ProfitReportRecord, 0)
+	doctors, err := s.Engine.FindDoctors()
+	if err != nil {
+		return nil, err
+	}
+	caser := cases.Title(language.Russian)
+
+	for _, doctor := range doctors {
+		if doctor.Surname == "Лаборатория" {
+			continue
+		}
+		if doctor.Surname == "Здоровенко" {
+			doctor.Middlename = doctor.Middlename + " (лаборатория)"
+		}
+		visits, err := s.Engine.FindVisitsByDoctorSinceTill(doctor.ID, fromDate, toDate)
+		if err != nil {
+			return nil, err
+		}
+		var total int
+		for _, visit := range visits {
+			total += visit.TotalSum
+		}
+
+		res.Records = append(res.Records, &ProfitReportRecord{
+			Name: fmt.Sprintf("%s %s %s", caser.String(strings.ToLower(doctor.Surname)), caser.String(strings.ToLower(doctor.FirstName)), caser.String(strings.ToLower(doctor.Middlename))),
+			Sum:  total,
+		})
+		res.TotalSum += total
+	}
 
 	return res, nil
 }
