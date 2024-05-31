@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/theshamuel/medregistry20/app/store/model"
 	"github.com/theshamuel/medregistry20/app/utils"
 	"log"
@@ -163,6 +164,10 @@ func (s *Remote) FindVisitsByClientIDSinceTill(clientID string, startDateEvent, 
 // nolint: revive
 func (s *Remote) IncrementSeq(idx int, code string) error {
 	return errors.New("findVisitsByClientIDSinceTill is not implementer in Remote engine")
+}
+
+func (s *Remote) GetProfitByDoctorSinceTill(startDateEventStr, endDateEventStr string) ([]model.ProfitByDoctorSinceTillRecord, error) {
+	return []model.ProfitByDoctorSinceTillRecord{}, fmt.Errorf("not implemented yet: %s, %s", startDateEventStr, endDateEventStr)
 }
 
 // GetSeq

@@ -209,6 +209,10 @@ func (r *Rest) reportOfPeriodProfit(w http.ResponseWriter, req *http.Request) {
 	startDateEvent := chi.URLParam(req, "startDateEvent")
 	endDateEvent := chi.URLParam(req, "endDateEvent")
 	file, err := r.DataService.BuildReportOfPeriodProfit(startDateEvent, endDateEvent)
+	if err != nil {
+		log.Printf("[ERROR] cannot build report of profit for repiod %#v", err)
+		return
+	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	_, err = w.Write(file)
 	if err != nil {
