@@ -76,7 +76,7 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 			caser.String(strings.ToTitle(client.Surname)),
 			client.Firstname[:2])
 	}
-	
+
 	contractNumber, err := s.Engine.GetSeq("contractNum")
 	if err != nil {
 		log.Printf("[ERROR] cannot get contractNum #%v", err)
@@ -197,15 +197,34 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	for i := 0; i < len(serviceTable.Records)-6; i++ {
 		f.SetRowVisible(f.GetSheetName(1), 26+i, true)
 	}
-
+	serviceNameCellStyle, _ := f.NewStyle(`{
+										 "alignment":
+											{
+												"horizontal":"left",
+												"vertical":"center", 
+												"wrap_text":true
+											},
+										 "font":
+											{
+												"bold":false, 
+												"family":"Times New Roman", 
+												"size":10
+											}
+										}`)
 	for i, k := range serviceTable.Records {
 		// For case when services more than 5 we need to fill up the bottom line of services table but
 		// the index of this row is 61, so I need this condition below to recalculate startIndex
 		if i == len(serviceTable.Records)-1 && len(serviceTable.Records) > 5 {
 			startIndex = 61 - i
 		}
+		serviceName := k.Name
+		if strings.Contains(serviceName, "[") && strings.Contains(serviceName, "]") {
+			serviceName = fmt.Sprintf("%s%s", serviceName[0:strings.Index(serviceName, "[")-1], serviceName[strings.Index(serviceName, "]")+1:])
+		}
+		f.SetCellStyle(sheetName, fmt.Sprintf("C%d", startIndex+i), fmt.Sprintf("C%d", startIndex+i), serviceNameCellStyle)
+
 		f.SetCellStr(sheetName, fmt.Sprintf("B%d", startIndex+i), fmt.Sprintf("%d", i+1))
-		f.SetCellStr(sheetName, fmt.Sprintf("C%d", startIndex+i), k.Name)
+		f.SetCellStr(sheetName, fmt.Sprintf("C%d", startIndex+i), serviceName)
 		f.SetCellStr(sheetName, fmt.Sprintf("O%d", startIndex+i), fmt.Sprintf("%d", k.Quantity))
 		f.SetCellStr(sheetName, fmt.Sprintf("Q%d", startIndex+i), fmt.Sprintf("%d", k.Price))
 		f.SetCellStr(sheetName, fmt.Sprintf("S%d", startIndex+i), fmt.Sprintf("%d", k.Sum))
