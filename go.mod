@@ -1,6 +1,6 @@
 module github.com/theshamuel/medregistry20
 
-go 1.21
+go 1.24.7
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
