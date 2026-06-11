@@ -133,9 +133,9 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
 	f.SetCellStr(sheetName, "A11", clientPhoneCell)
 
-	clientPhoneCell = f.GetCellValue(sheetName, "A183")
+	clientPhoneCell = f.GetCellValue(sheetName, "A83")
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
-	f.SetCellStr(sheetName, "A183", clientPhoneCell)
+	f.SetCellStr(sheetName, "A83", clientPhoneCell)
 
 	clientPhoneCell = f.GetCellValue(sheetName, "N110")
 	clientPhoneCell = strings.ReplaceAll(clientPhoneCell, "[clientPhone]", utils.GetPhoneValue(client.Phone))
@@ -146,9 +146,9 @@ func (s *DataStore) BuildReportContract(req ReportContractReq) ([]byte, error) {
 	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
 	f.SetCellStr(sheetName, "P111", clientEmailCell)
 
-	clientEmailCell = f.GetCellValue(sheetName, "A183")
+	clientEmailCell = f.GetCellValue(sheetName, "A83")
 	clientEmailCell = strings.ReplaceAll(clientEmailCell, "[clientEmail]", utils.GetEmailValue(client.Email))
-	f.SetCellStr(sheetName, "A183", clientEmailCell)
+	f.SetCellStr(sheetName, "A83", clientEmailCell)
 
 	//Fill up contract number
 	contractNumCell := f.GetCellValue(sheetName, "H8")
